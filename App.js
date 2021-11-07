@@ -1,21 +1,29 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    Text,
+    View,
+    ScrollView,
+    Image,
+    TextInput,
+    Alert,
+} from "react-native";
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+async function getData(path) {
+    const response = await fetch("https://reactnative.dev/movies.json" + path);
+    const json = await response.json();
+    return json;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const App = () => {
+    return (
+        <ScrollView>
+            <Text>Some text</Text>
+        </ScrollView>
+    );
+};
+
+async function a(){var answer = await getData(""); console.log(answer)};
+a()
+export default App;
