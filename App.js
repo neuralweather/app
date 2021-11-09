@@ -1,37 +1,20 @@
 import React, { useEffect } from "react";
-import { View, ScrollView, Image, StyleSheet, Text, useWindowDimensions } from "react-native";
+import { View, ScrollView, Image, StyleSheet, Text, Animated, FlatList, SafeAreaView, StatusBar } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import {  TabView, SceneMap } from 'react-native-tab-view';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+
 async function getData(path) {
   const response = await fetch("https://reactnative.dev/movies.json" + path);
   const json = await response.json();
   return json;
 }
-const FirstRoute = () => (
-  <View style={{ flex: 1, backgroundColor: '#ff4081' }} />
-);
-
-const SecondRoute = () => (
-  <View style={{ flex: 1, backgroundColor: '#673ab7' }} />
-);
-
-const renderScene = SceneMap({
-  first: FirstRoute,
-  second: SecondRoute,
-});
 const heroImgFile = "cloudy-rainy.png";
 const currentTemp = 22;
 const App = () => {
-  const layout = useWindowDimensions();
 
-  const [index, setIndex] = React.useState(0);
-  const [routes] = React.useState([
-    { key: 'first', title: 'First' },
-    { key: 'second', title: 'Second' },
-  ]);
   return (
     <ScrollView style={{ backgroundColor: "#809EA1" }}>
       <View style={styles.heroWrapper}>
@@ -43,15 +26,112 @@ const App = () => {
           <Text style={styles.heroTemp}>{currentTemp + "°"}</Text>
         </View>
       </View>
-      <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: layout.width }}
-    />
     </ScrollView>
   );
 };
+
+const todoList = [
+  { id: '1', text: 'Learn JavaScript' },
+  { id: '2', text: 'Learn React' },
+  { id: '3', text: 'Learn TypeScript' },
+];
+const Separator = () => <View style={styles.itemSeparator} />;
+const LeftSwipeActions = () => {
+  return (
+    <View
+      style={{ flex: 1, backgroundColor: '#ccffbd', justifyContent: 'center' }}
+    >
+      <Text
+        style={{
+          color: '#40394a',
+          paddingHorizontal: 10,
+          fontWeight: '600',
+          paddingHorizontal: 30,
+          paddingVertical: 20,
+        }}
+      >
+        Bookmark
+      </Text>
+    </View>
+  );
+};
+const rightSwipeActions = () => {
+  return (
+    <View
+      style={{
+        backgroundColor: '#ff8303',
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+      }}
+    >
+      <Text
+        style={{
+          color: '#1b1a17',
+          paddingHorizontal: 10,
+          fontWeight: '600',
+          paddingHorizontal: 30,
+          paddingVertical: 20,
+        }}
+      >
+        Delete
+      </Text>
+    </View>
+  );
+};
+const swipeFromLeftOpen = () => {
+  alert('Swipe from left');
+};
+const swipeFromRightOpen = () => {
+  alert('Swipe from right');
+};
+const ListItem = ({ text }) => (
+  <Swipeable
+    renderLeftActions={LeftSwipeActions}
+    renderRightActions={rightSwipeActions}
+    onSwipeableRightOpen={swipeFromRightOpen}
+    onSwipeableLeftOpen={swipeFromLeftOpen}
+  >
+    <View
+      style={{
+        paddingHorizontal: 30,
+        paddingVertical: 20,
+        backgroundColor: 'white',
+      }}
+    >
+      <Text style={{ fontSize: 24 }} style={{ fontSize: 20 }}>
+        {text}
+      </Text>
+    </View>
+  </Swipeable>
+);
+const SwipeGesture = () => {
+  return (
+    <>
+      <StatusBar />
+      <SafeAreaView style={styles.container}>
+        <Text style={{ textAlign: 'center', marginVertical: 20 }}>
+          Swipe right or left
+        </Text>
+        <FlatList
+          data={todoList}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <ListItem {...item} />}
+          ItemSeparatorComponent={() => <Separator />}
+        />
+      </SafeAreaView>
+    </>
+  );
+};
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  itemSeparator: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#444',
+  },
+});
 
 async function a() {
   var answer = await getData("");
@@ -59,7 +139,7 @@ async function a() {
 }
 a();
 
-const styles = StyleSheet.create({
+/*const styles = StyleSheet.create({
   heroWrapper: {
     flex: 1,
     justifyContent: "center",
@@ -83,5 +163,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-});
-export default App;
+});*/
+export default SwipeGesture;
