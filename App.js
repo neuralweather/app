@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+"use strict";
+
+import React, { StrictMode, useEffect, useState } from "react";
 import {
   View,
   ScrollView,
@@ -24,7 +26,7 @@ import {
 const server = "http://127.0.0.1:8080/";
 async function getData(path) {
   const response = await fetch(server + path)
-  const json = await response
+  const json = await response.json()
   return json;
 }
 function createQueryParametersString(params) {
@@ -95,21 +97,20 @@ const App = () => {
        // toDate: currentDate.getTime(),
       //});
       //"temp?fromDate="+(currentDate.getDate()-5).toDateString()+"&toDate="+(currentDate.getDate()+5).toDateString()
-      let weatherDataTemp = {};
+      let weatherDataTemp = {temperature:{}, humidity:{}, pressure:{}, wind:{}};
       weatherData = await getData("data");
-      for (i in weatherData) {
-        weatherDataTemp.temperature[i.timestamp]=i.temperature
+      for (const i of weatherData) {
+        weatherDataTemp.temperature[i.timestamp]=  i.temperature;
       }
       setTempDataHtml(reverseSortObject(weatherDataTemp.temperature));
       setCurrentTempHtml(12);
       setTempChart(
       getDataOverTime(
-        tempDataHtml,
+        reverseSortObject(weatherDataTemp.temperature),
         100,
         currentDate.getTime(),
         7
       ))
-        getObjectToVal(tempDataHtml, currentDate.getTime())[0][1]["temperature"]
       
     // } catch (e) {
     //   Alert.alert("Konnte keine Verbindung zum Server herstellen!");
