@@ -83,10 +83,14 @@ function getNthElOfElsInArray(arr, n) {
 function getDataOverTime(data, resolution, endOfWeek, days) {
     const steps = (86400000 * days) / resolution;
     const dataOverWeek = [];
-    for (let i = resolution; i >= 0; i--) {
-        dataOverWeek.push(getObjectToVal(data, endOfWeek - i * steps)[0][1]);
+    for (let i = resolution-1; i >= 0; i--) {
+        try {
+            dataOverWeek.push(getObjectToVal(data, endOfWeek - (i * steps+steps*(2/7*resolution)))[0][1]);
+        } catch (e) {
+            dataOverWeek.push(0);
+        }
     }
-    return dataOverWeek.reverse();
+    return dataOverWeek;
 }
 
 const App = () => {
@@ -111,14 +115,14 @@ const App = () => {
         };
         weatherData = await getData("data");
         for (const i of weatherData) {
-            weatherDataTemp.temperature[i.timestamp] = i.temperature;
+            weatherDataTemp.temperature[i.timestamp*1000] = i.temperature;
         }
         const sortedTemperature = reverseSortObject(
             weatherDataTemp.temperature
         );
         setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
         setTempChart(
-            getDataOverTime(sortedTemperature, 100, currentDate.getTime(), 7)
+            getDataOverTime(sortedTemperature, 40, currentDate.getTime(), 7)
         );
         // } catch (e) {
         //   Alert.alert("Konnte keine Verbindung zum Server herstellen!");
