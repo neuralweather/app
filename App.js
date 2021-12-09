@@ -83,9 +83,11 @@ function getNthElOfElsInArray(arr, n) {
 function getDataOverTime(data, resolution, endOfWeek, days) {
     const steps = (86400000 * days) / resolution;
     const dataOverWeek = [];
-    for (let i = resolution-1; i >= 0; i--) {
+    for (let i = resolution - 1; i >= 0; i--) {
         try {
-            dataOverWeek.push(getObjectToVal(data, endOfWeek - (i * steps+steps*(2/7*resolution)))[0][1]);
+            dataOverWeek.push(
+                getObjectToVal(data, endOfWeek - i * steps * 4)[0][1]
+            );
         } catch (e) {
             dataOverWeek.push(0);
         }
@@ -115,7 +117,7 @@ const App = () => {
         };
         weatherData = await getData("data");
         for (const i of weatherData) {
-            weatherDataTemp.temperature[i.timestamp*1000] = i.temperature;
+            weatherDataTemp.temperature[i.timestamp * 1000] = i.temperature;
         }
         const sortedTemperature = reverseSortObject(
             weatherDataTemp.temperature
