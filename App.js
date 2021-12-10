@@ -23,6 +23,7 @@ import {
   ContributionGraph,
   StackedBarChart,
 } from "react-native-chart-kit";
+import { sum } from "react-native-table-component/utils";
 const server = "http://127.0.0.1:8080/";
 let firstLoad = true;
 async function getData(path) {
@@ -94,11 +95,22 @@ function getDataOverTime(data, resolution, endOfWeek, days) {
   }
   return dataOverWeek;
 }
+function getAvgDataOverTime(data, from, to) {
+  let sum = 0;
+  const dataFromTo = getObjectToVal(getObjectFromVal(data, from), to);
+  const length = dataFromTo.length;
+  if (length==0){return 0}
+  for (let i = 0; i < length; i++) {
+    sum += dataFromTo[i][1];
+  }
 
+  return sum / length;
+}
 const App = () => {
   const [currentDateHtml, setCurrentDateHtml] = useState(currentDate);
   const [currentTempDataHtml, setCurrentTempHtml] = useState();
   const [tempChart, setTempChart] = useState([]);
+  const [tempAvgChart, setTempAvgChart] = useState([]);
   const [heroImg, setHeroImg] = useState(heroImgs.cloudy);
 
   const updateData = async () => {
@@ -119,11 +131,51 @@ const App = () => {
     for (const i of weatherData) {
       weatherDataTemp.temperature[i.timestamp * 1000] = i.temperature;
     }
+    currentDate.get;
     const sortedTemperature = reverseSortObject(weatherDataTemp.temperature);
     setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
     setTempChart(
       getDataOverTime(sortedTemperature, 40, currentDate.getTime(), 7)
     );
+    let midNightDate = currentDate;
+    midNightDate.setHours(0, 0, 0, 0);
+    setTempAvgChart([
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 7,
+        midNightDate.getTime() - 86400000 * 6
+      ),
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 6,
+        midNightDate.getTime() - 86400000 * 5
+      ),
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 5,
+        midNightDate.getTime() - 86400000 * 4
+      ),
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 4,
+        midNightDate.getTime() - 86400000 * 3
+      ),
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 2,
+        midNightDate.getTime() - 86400000 * 1
+      ),
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 1,
+        midNightDate.getTime() - 86400000 * 0
+      ),
+      getAvgDataOverTime(
+        sortedTemperature,
+        midNightDate.getTime() - 86400000 * 0,
+        midNightDate.getTime() + 86400000
+      ),
+    ]);
     // } catch (e) {
     //   Alert.alert("Konnte keine Verbindung zum Server herstellen!");
     // }
@@ -248,6 +300,48 @@ const App = () => {
                 //paddingLeft: 30,
                 marginVertical: 8,
                 borderRadius: 20,
+              }}
+            />
+            <BarChart
+              style={{
+                shadowRadius: 10,
+                shadowOffset: 30,
+                backgroundColor: "#6399D1",
+                paddingVertical: 15,
+                //paddingLeft: 30,
+                marginVertical: 8,
+                borderRadius: 20,
+              }}
+              data={{
+                labels: [
+                  weekDays.slice(currentDate.getDay() - 6)[0].slice(0, 2),
+                  weekDays.slice(currentDate.getDay() - 5)[0].slice(0, 2),
+                  weekDays.slice(currentDate.getDay() - 4)[0].slice(0, 2),
+                  weekDays.slice(currentDate.getDay() - 3)[0].slice(0, 2),
+                  weekDays.slice(currentDate.getDay() - 2)[0].slice(0, 2),
+                  weekDays.slice(currentDate.getDay() - 1)[0].slice(0, 2),
+                  weekDays.slice(currentDate.getDay() - 0)[0].slice(0, 2),
+                ],
+                datasets: [
+                  {
+                    data: tempAvgChart,
+                  },
+                ],
+              }}
+              width={wp("80%")}
+              height={220}
+              yAxisLabel=""
+              yAxisSuffix="°"
+              chartConfig={{
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+
+                backgroundColor: "#6399D1",
+                backgroundGradientFrom: "#6399D1",
+                backgroundGradientTo: "#6399D1",
+                strokeWidth: 4, // optional, default 3
+
+                decimalPlaces: 0, // optional, defaults to 2dp
+                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               }}
             />
           </View>
