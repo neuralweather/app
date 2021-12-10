@@ -32,7 +32,7 @@ async function getData(path) {
   return json;
 }
 function createQueryParametersString(params) {
-  url = new URLSearchParams(params);
+  const url = new URLSearchParams(params);
   return url;
 }
 const weekDays = [
@@ -116,10 +116,10 @@ const App = () => {
   const updateData = async () => {
     //try {
     //  86400000 = 1 day in milliseconds
-    //let url = createQueryParametersString({
-    // fromDate: currentDate.getTime() - 86400000 * 7,
-    // toDate: currentDate.getTime(),
-    //});
+    let url = createQueryParametersString({
+     from: Math.floor((currentDate.getTime() - 86400000 * 7)/1000),
+     to: Math.floor(currentDate.getTime()/1000),
+    });
     //"temp?fromDate="+(currentDate.getDate()-5).toDateString()+"&toDate="+(currentDate.getDate()+5).toDateString()
     let weatherDataTemp = {
       temperature: {},
@@ -127,7 +127,7 @@ const App = () => {
       pressure: {},
       wind: {},
     };
-    weatherData = await getData("data");
+    weatherData = await getData("data?"+url);
     for (const i of weatherData) {
       weatherDataTemp.temperature[i.timestamp * 1000] = i.temperature;
     }
