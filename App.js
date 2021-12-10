@@ -23,8 +23,7 @@ import {
   ContributionGraph,
   StackedBarChart,
 } from "react-native-chart-kit";
-import { sum } from "react-native-table-component/utils";
-const server = "http://127.0.0.1:8080/";
+const server = "http://172.31.3.26:8080/";
 let firstLoad = true;
 async function getData(path) {
   const response = await fetch(server + path);
@@ -56,7 +55,7 @@ const heroImgs = {
 let currentDate = new Date();
 let weatherData;
 function setDay(change) {
-  currentDate.setDate(currentDate.getDate() + change);
+  currentDate.setTime(currentDate.getTime() + change * 86400000);
 }
 
 //sorts dict and returns
@@ -99,7 +98,9 @@ function getAvgDataOverTime(data, from, to) {
   let sum = 0;
   const dataFromTo = getObjectToVal(getObjectFromVal(data, from), to);
   const length = dataFromTo.length;
-  if (length==0){return 0}
+  if (length == 0) {
+    return 0;
+  }
   for (let i = 0; i < length; i++) {
     sum += dataFromTo[i][1];
   }
@@ -114,11 +115,11 @@ const App = () => {
   const [heroImg, setHeroImg] = useState(heroImgs.cloudy);
 
   const updateData = async () => {
-    //try {
+    try {
     //  86400000 = 1 day in milliseconds
-    let url = createQueryParametersString({
-     from: Math.floor((currentDate.getTime() - 86400000 * 7)/1000),
-     to: Math.floor(currentDate.getTime()/1000),
+    let url = await createQueryParametersString({
+      from: Math.floor((currentDate.getTime() - 86400000 * 7) / 1000),
+      to: Math.floor(currentDate.getTime() / 1000),
     });
     //"temp?fromDate="+(currentDate.getDate()-5).toDateString()+"&toDate="+(currentDate.getDate()+5).toDateString()
     let weatherDataTemp = {
@@ -127,17 +128,21 @@ const App = () => {
       pressure: {},
       wind: {},
     };
-    weatherData = await getData("data?"+url);
+    weatherData = await getData("data?" + url);
     for (const i of weatherData) {
       weatherDataTemp.temperature[i.timestamp * 1000] = i.temperature;
     }
-    currentDate.get;
+
     const sortedTemperature = reverseSortObject(weatherDataTemp.temperature);
-    setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
+    try {
+      setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
+    } catch (e) {
+      setCurrentTempHtml(0);
+    }
     setTempChart(
       getDataOverTime(sortedTemperature, 40, currentDate.getTime(), 7)
     );
-    let midNightDate = currentDate;
+    let midNightDate = new Date(currentDate.getTime());
     midNightDate.setHours(0, 0, 0, 0);
     setTempAvgChart([
       getAvgDataOverTime(
@@ -176,9 +181,9 @@ const App = () => {
         midNightDate.getTime() + 86400000
       ),
     ]);
-    // } catch (e) {
-    //   Alert.alert("Konnte keine Verbindung zum Server herstellen!");
-    // }
+    } catch (e) {
+      Alert.alert("Konnte keine Verbindung zum Server herstellen!");
+    }
   };
   const setLastDay = () => {
     setDay(-1);
@@ -208,7 +213,7 @@ const App = () => {
             <View style={styles.heroWeather}>
               <Image
                 style={styles.heroImg}
-                source={require("./images/" + heroImg)}
+                source={require("./images/"+heroImg)}
               />
               <Text style={styles.heroTemp}>{currentTempDataHtml}°C</Text>
             </View>
@@ -243,6 +248,7 @@ const App = () => {
         <View style={styles.weatherChartWrapper}>
           <View style={styles.weatherChart}>
             <Text style={styles.weatherChartTitle}>Temperatur</Text>
+            <Text style={styles.chartSubtitle}>Historie</Text>
             <LineChart
               data={{
                 labels: [
@@ -302,6 +308,7 @@ const App = () => {
                 borderRadius: 20,
               }}
             />
+            <Text style={styles.chartSubtitle}>Durchschnitt</Text>
             <BarChart
               style={{
                 shadowRadius: 10,
@@ -343,6 +350,7 @@ const App = () => {
                 decimalPlaces: 0, // optional, defaults to 2dp
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               }}
+              showValuesOnTopOfBars
             />
           </View>
         </View>
@@ -451,6 +459,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  chartSubtitle: {
+    fontSize: wp("5%"),
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 10,
   },
   weatherChartWrapper: {
     marginVertical: hp("20%"),
