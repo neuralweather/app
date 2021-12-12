@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: App.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: App.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview React Native App to visualize weather data from the server, written for a school project
+ * @author Timon Gärtner
+ */
+
+"use strict";
+
+import React, { StrictMode, useEffect, useState } from "react";
+import {
+    View,
+    ScrollView,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    Alert,
+} from "react-native";
+import {
+    widthPercentageToDP as wp,
+    heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import { LineChart, BarChart } from "react-native-chart-kit";
+
+/**
+ * ip address of server
+ * @type {string}
+ */
+const server = "http://172.31.3.26:8080/";
+
+/**
+ * checks if app is rendered for the first time
+ * @type {boolean}
+ */
+let firstLoad = true;
+
+/**
+ *
+ * @param {string} path to fetch
+ * @returns {Promise} Promise with json data
+ */
+async function getData(path) {
+    console.log("fetching data");
+    const response = await fetch(server + path); // fetch data from server
+    const json = await response.json(); // converts server response to json
+    return json;
+}
+/**
+ *
+ * @param {{str: {string}, str: {string}}=} params to query (e.g. {'from': '12334321', 'to': '13254567'})
+ * @returns {string} query string to be used in fetch (e.g. 'from=12334321&amp;to=13254567')
+ */
+function createQueryParametersString(params) {
+    const url = new URLSearchParams(params); // creates a query string from the params object
+    return url;
+}
+/** String Array of Week Days (indexes equaling Date-Object getDay) */
+const weekDays = [
+    "Sonntag",
+    "Montag",
+    "Dienstag",
+    "Mittwoch",
+    "Donnerstag",
+    "Freitag",
+    "Samstag",
+];
+
+/** Object with Images to be shown in the app hero-page */
+const heroImgs = {
+    sunny: "sunny.png",
+    cloudy: "cloudy.png",
+    rainy: "rainy.png",
+    snowy: "snowy.png",
+};
+let currentDate = new Date();
+let weatherData;
+function setDay(change) {
+    // 86400000 = 1 day in ms
+    currentDate.setTime(currentDate.getTime() + change * 86400000); // sets currentDate to currentDate + change*days
+}
+
+/**
+ * sorts an Object by its keys and reverses it
+ * @param {object} obj (e.g. {1: 'a', 3: 'b', 2: 'c'})
+ * @returns {Array} Array of sorted keys and values (e.g. [[3, 'b'], [2, 'c'], [1, 'a']])
+ */
+function reverseSortObject(obj) {
+    return Object.entries(obj)
+        .sort((a, b) => a[0] - b[0]) // sorts by key
+        .reverse(); // reverses the order
+}
+/**
+ *
+ * @param {Array} arr (e.g. [[1, 'a'], [2, 'b'], [3, 'c']])
+ * @param {*} toVal (e.g. 2)
+ * @returns {Array} Array (e.g. [[1, 'a'], [2, 'b']])
+ */
+function getArrayToVal(arr, toVal) {
+    return arr.filter((e) => e[0] &lt;= toVal); // returns array from arr where key is &lt;= toVal
+}
+
+/**
+ *
+ * @param {Array} arr (e.g. [[1, 'a'], [2, 'b'], [3, 'c']])
+ * @param {*} fromVal (e.g. 2)
+ * @returns {Array} Array (e.g. [[2, 'b'], [3, 'c']])
+ */
+function getArrayFromVal(arr, fromVal) {
+    return arr.filter((e) => e[0] >= fromVal); // returns array from arr where key is >= fromVal
+}
+
+/**
+ *
+ * @param {Array} data
+ * @param {int} resolution
+ * @param {int} endOfWeek
+ * @param {int} days
+ * @returns {Array} Array of data from endOfWeek - days to endOfWeek with length = resolution
+ */
+function getDataOverTime(data, resolution, endOfWeek, days) {
+    const steps = (86400000 * days) / resolution; // calculates step size in ms
+    const dataOverWeek = [];
+    // appends resolution amount of data to dataOverWeek, appends nearest smaller key from endOfWeek - i * stepsize to endOfWeek
+    for (let i = resolution - 1; i >= 0; i--) {
+        try {
+            dataOverWeek.push(
+                getArrayToVal(
+                    data,
+                    endOfWeek - i * steps + 85000000 /* 85000000 offset */
+                )[0][1]
+            );
+        } catch (e) {
+            dataOverWeek.push(0); // if no data is available, append 0
+        }
+    }
+    return dataOverWeek;
+}
+/**
+ *
+ * @param {Array} data
+ * @param {int} from
+ * @param {int} to
+ * @returns {number} average of data from @param from to @param to
+ */
+function getAvgDataOverTime(data, from, to) {
+    let sum = 0;
+    const dataFromTo = getArrayToVal(getArrayFromVal(data, from), to); // gets data "from" from to "to"
+    const length = dataFromTo.length; // gets length of dataFromTo
+    if (length == 0) {
+        return 0; // if no data is available, return 0
+    }
+    for (let i = 0; i &lt; length; i++) {
+        sum += dataFromTo[i][1]; // sums up all data
+    }
+
+    return sum / length; // sum divided by length = average
+}
+
+/**
+ * 
+ * @param {{str: (string), str: Array&lt;num>, str: (Array&lt;num>)}=} props
+ * str: Content the info is about (e.g. "Temperature")
+ * str: history Chart Array
+ * str: avg Data Chart Array
+ * @returns rendered weather info component
+ */
+const WeatherInfoComponent = (props) => {
+    const section = props.section;
+    const historyChart = props.historyChart;
+    const avgChart = props.avgChart;
+
+    return (
+        &lt;View style={styles.holyWrapper}>
+            &lt;View style={styles.weatherChartWrapper}>
+                &lt;View style={styles.weatherChart}>
+                    &lt;Text style={styles.weatherChartTitle}>{section}&lt;/Text>
+                    &lt;Text style={styles.chartSubtitle}>Historie&lt;/Text>
+                    &lt;LineChart
+                        data={{
+                            labels: [
+                                weekDays
+                                    .slice(currentDate.getDay() - 6)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 5)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 4)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 3)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 2)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 1)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 0)[0]
+                                    .slice(0, 2),
+                            ],
+                            datasets: [
+                                {
+                                    data: historyChart,
+                                },
+                            ],
+                        }}
+                        width={wp("80%")}
+                        height={160}
+                        yAxisLabel=""
+                        yAxisSuffix="°"
+                        yAxisInterval={1}
+                        withInnerLines={true}
+                        withHorizontalLines={true}
+                        withVerticalLines={false}
+                        chartConfig={{
+                            color: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+
+                            backgroundColor: "#6399D1",
+                            backgroundGradientFrom: "#6399D1",
+                            backgroundGradientTo: "#6399D1",
+                            strokeWidth: 4,
+
+                            decimalPlaces: 0,
+                            labelColor: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+                            style: {
+                                borderRadius: 20,
+                            },
+                        }}
+                        withDots={false}
+                        bezier
+                        segments={5}
+                        style={{
+                            shadowRadius: 10,
+                            shadowOffset: 30,
+                            backgroundColor: "#6399D1",
+                            paddingVertical: 15,
+                            marginVertical: 8,
+                            borderRadius: 20,
+
+                            paddingRight: 40,
+                        }}
+                    />
+                    &lt;Text style={styles.chartSubtitle}>Durchschnitt&lt;/Text>
+                    &lt;BarChart
+                        style={{
+                            shadowRadius: 10,
+                            shadowOffset: 30,
+                            backgroundColor: "#6399D1",
+                            paddingVertical: 15,
+                            marginVertical: 8,
+                            borderRadius: 20,
+
+                            paddingRight: 40,
+                        }}
+                        data={{
+                            labels: [
+                                weekDays
+                                    .slice(currentDate.getDay() - 6)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 5)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 4)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 3)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 2)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 1)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 0)[0]
+                                    .slice(0, 2),
+                            ],
+                            datasets: [
+                                {
+                                    data: avgChart,
+                                },
+                            ],
+                        }}
+                        width={wp("80%")}
+                        height={220}
+                        yAxisLabel=""
+                        yAxisSuffix="°"
+                        chartConfig={{
+                            color: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+
+                            backgroundColor: "#6399D1",
+                            backgroundGradientFrom: "#6399D1",
+                            backgroundGradientTo: "#6399D1",
+                            strokeWidth: 4,
+
+                            decimalPlaces: 0,
+                            labelColor: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+                        }}
+                        showValuesOnTopOfBars
+                    />
+                &lt;/View>
+            &lt;/View>
+            &lt;View style={styles.splitLine}>&lt;/View>
+        &lt;/View>
+    );
+};
+
+/**
+ *  @returns jsx - rendered App
+ */
+const App = () => {
+    /*
+    consts that are used in the app and change (e.g. for Charts)
+    */
+    const /** !string */ [currentDateHtml, setCurrentDateHtml] = useState(
+            currentDate.toDateString()
+        );
+    const /** !number */ [currentTempDataHtml, setCurrentTempHtml] = useState();
+    const /** !Array&lt;number> */ [tempChart, setTempChart] = useState([0]);
+    const /** !Array&lt;number> */ [tempAvgChart, setTempAvgChart] = useState([0]);
+    const /** !string */ [heroImg, setHeroImg] = useState(heroImgs.cloudy);
+
+    /**
+     * @name updateData()
+     * updates all consts used in the app
+     * @see currentDateHtml, @see currentTempDataHtml, @see tempChart, @see tempAvgChart, @see heroImg
+     */
+    const updateData = async () => {
+        console.log("updating data");
+        try {
+            //  86400000 = 1 day in milliseconds
+            let url = await createQueryParametersString({
+                from: Math.floor((currentDate.getTime() - 86400000 * 7) / 1000),
+                to: Math.floor(currentDate.getTime() / 1000),
+            });
+            let weatherDataTemp = {
+                temperature: {},
+                humidity: {},
+                pressure: {},
+                wind: {},
+            };
+            weatherData = await getData("data?" + url);
+        } catch (e) {
+            Alert.alert("Konnte keine Verbindung zum Server herstellen!");
+            return;
+        }
+
+        // loops through every object (timestamp) of weatherData and splits the categories into its own object
+        for (const i of weatherData) {
+            weatherDataTemp.temperature[
+                i.timestamp * 1000 /* utcTimestamp in s to ms */
+            ] = i.temperature;
+        }
+
+        const sortedTemperature = reverseSortObject(
+            weatherDataTemp.temperature
+        ); // sorts temperature object by its keys and reverses it (needed multiple times below)
+        try {
+            // sets currentTempHtml to the first value of sortedTemperature
+            // (the latest)
+            setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
+        } catch (e) {
+            setCurrentTempHtml(0); // if no data is available, set 0
+        }
+        console.log("updating tempChart");
+        setTempChart(
+            getDataOverTime(
+                sortedTemperature,
+                40 /* resolution */,
+                currentDate.getTime(),
+                7 /* over x days */
+            )
+        );
+
+        // clones currentDate sets it to the time at 00:00:00
+        // (needed for avg calculation, because avg is calculated from 00:00:00 to 00:00:00)
+        let midNightDate = new Date(currentDate.getTime());
+        midNightDate.setHours(0, 0, 0, 0);
+
+        console.log("updating avg data chart");
+        setTempAvgChart([
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 7,
+                midNightDate.getTime() - 86400000 * 6
+            ), // gets avg data the day 7 days before currentDate
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 6,
+                midNightDate.getTime() - 86400000 * 5
+            ),
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 5,
+                midNightDate.getTime() - 86400000 * 4
+            ),
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 4,
+                midNightDate.getTime() - 86400000 * 3
+            ),
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 2,
+                midNightDate.getTime() - 86400000 * 1
+            ),
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 1,
+                midNightDate.getTime() - 86400000 * 0
+            ),
+            getAvgDataOverTime(
+                sortedTemperature,
+                midNightDate.getTime() - 86400000 * 0,
+                midNightDate.getTime() + 86400000
+            ),
+        ]);
+    };
+    /**
+     * @name setLastDay()
+     * updates the date in the app to the date before the current date
+     * loads the data for the new date
+     */
+    const setLastDay = () => {
+        console.log("updating the apps data to the last day");
+        setDay(-1);
+        setCurrentDateHtml(currentDate.toDateString());
+        updateData();
+    };
+    /**
+     * @name setNextDay()
+     * updates the date in the app to the date after the current date
+     * loads the data for the new date
+     */
+    const setNextDay = () => {
+        console.log("updating the apps data to the next day");
+        setDay(1);
+        setCurrentDateHtml(currentDate.toDateString());
+        updateData();
+    };
+
+    // if the app is started for the first time, load the data
+    if (firstLoad) {
+        updateData();
+        firstLoad = false;
+    }
+
+    // jsx
+    return (
+        &lt;ScrollView
+            style={{ backgroundColor: "#809EA1" }}
+            snapToInterval={hp("70%")}
+            snapToAlignment={"center"}
+            disableIntervalMomentum={true}
+            snapToEnd={false}
+        >
+            &lt;View style={styles.holyWrapper}>
+                &lt;View style={styles.heroWrapper}>
+                    &lt;View style={styles.hero}>
+                        &lt;View style={styles.heroWeather}>
+                            &lt;Image
+                                style={styles.heroImg}
+                                source={require("./images/" + "cloudy.png")}
+                            />
+                            &lt;Text style={styles.heroTemp}>
+                                {currentTempDataHtml}°C
+                            &lt;/Text>
+                        &lt;/View>
+                        &lt;View style={styles.weatherSwipeWrapper}>
+                            &lt;View style={styles.weatherSwipe}>
+                                &lt;TouchableOpacity
+                                    style={styles.weatherSwipeBtn}
+                                    onPress={setLastDay}
+                                >
+                                    &lt;Image
+                                        style={styles.weatherSwipeBtnIconLeft}
+                                        source={require("./images/left-arrow.png")}
+                                    />
+                                &lt;/TouchableOpacity>
+                                &lt;Text style={styles.weatherSwipeText}>
+                                    {currentDateHtml}
+                                &lt;/Text>
+                                &lt;TouchableOpacity
+                                    style={styles.weatherSwipeBtn}
+                                    onPress={setNextDay}
+                                >
+                                    &lt;Image
+                                        style={styles.weatherSwipeBtnIconRight}
+                                        source={require("./images/right-arrow.png")}
+                                    />
+                                &lt;/TouchableOpacity>
+                            &lt;/View>
+                        &lt;/View>
+                    &lt;/View>
+                &lt;/View>
+                &lt;View style={styles.splitLine}>&lt;/View>
+                &lt;WeatherInfoComponent section="Temperatur" historyChart={tempChart} avgChart={tempAvgChart}/>
+            &lt;/View>
+        &lt;/ScrollView>
+    );
+};
+
+/**
+ * Styles for the jsx (react native components)
+ */
+const styles = StyleSheet.create({
+    holyWrapper: {
+        alignItems: "center",
+        width: wp("100%"),
+    },
+    heroWrapper: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    hero: {
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        height: hp("100%"),
+        width: wp("74.3%"),
+    },
+    heroWeather: {
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexDirection: "row",
+        width: wp("74.3%"),
+    },
+    heroImg: {
+        width: wp("25%"),
+        height: wp("25%"),
+
+        resizeMode: "contain",
+    },
+    heroTemp: {
+        fontSize: wp("25%"),
+        color: "#fff",
+        fontWeight: "bold",
+    },
+    weatherSwipeWrapper: {
+        marginTop: 20,
+        height: 100,
+        justifyContent: "center",
+        alignContent: "center",
+    },
+    weatherSwipe: {
+        width: wp("64%"),
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+
+        borderBottomWidth: 10,
+        borderTopWidth: 10,
+        borderColor: "#BFCFCF",
+        paddingVertical: 8,
+        borderRadius: 10,
+    },
+    weatherSwipeDay: {
+        backgroundColor: "blue",
+        width: wp("50%"),
+        margin: 10,
+        height: 40,
+        borderRadius: 10,
+        //paddingHorizontal : 30
+    },
+    weatherSwipeBtnIcon: {
+        width: wp("10%"),
+        height: wp("10%"),
+        position: "absolute",
+        right: 0,
+    },
+    weatherSwipeText: {
+        fontSize: wp("5%"),
+        color: "#fff",
+        fontWeight: "bold",
+    },
+    weatherSwipeBtnIconLeft: {
+        width: wp("10%"),
+        height: wp("10%"),
+    },
+    weatherSwipeBtnIconRight: {
+        width: wp("10%"),
+        height: wp("10%"),
+    },
+    splitLine: {
+        width: wp("85%"),
+        backgroundColor: "#BDCCCE",
+        height: 10,
+        borderRadius: 26,
+    },
+    weatherChartTitle: {
+        fontSize: wp("10%"),
+        marginTop: 15,
+        marginBottom: 10,
+        color: "#fff",
+        fontWeight: "bold",
+        textAlign: "center",
+    },
+    chartSubtitle: {
+        fontSize: wp("5%"),
+        color: "#fff",
+        fontWeight: "bold",
+        textAlign: "center",
+        marginTop: 10,
+    },
+    weatherChartWrapper: {
+        marginVertical: hp("20%"),
+        width: wp("100%"),
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    valueRightNow: {
+        fontSize: wp("8%"),
+        color: "#fff",
+        fontWeight: "bold",
+        marginTop: 10,
+        textAlign: "center",
+    },
+});
+
+export default App;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#App">App</a></li><li><a href="global.html#createQueryParametersString">createQueryParametersString</a></li><li><a href="global.html#firstLoad">firstLoad</a></li><li><a href="global.html#getArrayFromVal">getArrayFromVal</a></li><li><a href="global.html#getArrayToVal">getArrayToVal</a></li><li><a href="global.html#getAvgDataOverTime">getAvgDataOverTime</a></li><li><a href="global.html#getData">getData</a></li><li><a href="global.html#getDataOverTime">getDataOverTime</a></li><li><a href="global.html#heroImgs">heroImgs</a></li><li><a href="global.html#reverseSortObject">reverseSortObject</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#setLastDay()updatesthedateintheapptothedatebeforethecurrentdateloadsthedataforthenewdate">setLastDay()
+updates the date in the app to the date before the current date
+loads the data for the new date</a></li><li><a href="global.html#setNextDay()updatesthedateintheapptothedateafterthecurrentdateloadsthedataforthenewdate">setNextDay()
+updates the date in the app to the date after the current date
+loads the data for the new date</a></li><li><a href="global.html#styles">styles</a></li><li><a href="global.html#updateData()updatesallconstsusedintheapp">updateData()
+updates all consts used in the app</a></li><li><a href="global.html#WeatherInfoComponent">WeatherInfoComponent</a></li><li><a href="global.html#weekDays">weekDays</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Mon Dec 13 2021 00:29:50 GMT+0100 (Mitteleuropäische Normalzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
