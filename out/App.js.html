@@ -1,4 +1,32 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: App.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: App.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * @fileoverview React Native App to visualize weather data from the server, written for a school project
  * @author Timon Gärtner
  */
@@ -36,7 +64,7 @@ let firstLoad = true;
 /**
  *
  * @param {string} path to fetch
- * @returns {Promise} Promise with json data
+ * @returns {Promise} of json data
  */
 async function getData(path) {
     console.log("fetching data");
@@ -47,7 +75,7 @@ async function getData(path) {
 /**
  *
  * @param {{str: {string}, str: {string}}} params to query (e.g. {'from': '12334321', 'to': '13254567'})
- * @returns {string} query string to be used in fetch (e.g. 'from=12334321&to=13254567')
+ * @returns {string} query string to be used in fetch (e.g. 'from=12334321&amp;to=13254567')
  */
 function createQueryParametersString(params) {
     const url = new URLSearchParams(params); // creates a query string from the params object
@@ -81,7 +109,7 @@ function setDay(change) {
 /**
  * sorts an Object by its keys and reverses it
  * @param {object} obj (e.g. {1: 'a', 3: 'b', 2: 'c'})
- * @returns {Array} Array of sorted keys and values (e.g. [[3, 'b'], [2, 'c'], [1, 'a']])
+ * @returns {Array} sorted keys and values (e.g. [[3, 'b'], [2, 'c'], [1, 'a']])
  */
 function reverseSortObject(obj) {
     return Object.entries(obj)
@@ -92,17 +120,17 @@ function reverseSortObject(obj) {
  *
  * @param {Array} arr (e.g. [[1, 'a'], [2, 'b'], [3, 'c']])
  * @param {*} toVal (e.g. 2)
- * @returns {Array} Array (e.g. [[1, 'a'], [2, 'b']])
+ * @returns {Array} (e.g. [[1, 'a'], [2, 'b']])
  */
 function getArrayToVal(arr, toVal) {
-    return arr.filter((e) => e[0] <= toVal); // returns array from arr where key is <= toVal
+    return arr.filter((e) => e[0] &lt;= toVal); // returns array from arr where key is &lt;= toVal
 }
 
 /**
  *
  * @param {Array} arr (e.g. [[1, 'a'], [2, 'b'], [3, 'c']])
  * @param {*} fromVal (e.g. 2)
- * @returns {Array} Array (e.g. [[2, 'b'], [3, 'c']])
+ * @returns {Array} (e.g. [[2, 'b'], [3, 'c']])
  */
 function getArrayFromVal(arr, fromVal) {
     return arr.filter((e) => e[0] >= fromVal); // returns array from arr where key is >= fromVal
@@ -114,7 +142,7 @@ function getArrayFromVal(arr, fromVal) {
  * @param {int} resolution
  * @param {int} endOfWeek
  * @param {int} days
- * @returns {Array} Array of data from endOfWeek - days to endOfWeek with length = resolution
+ * @returns {Array} of data from endOfWeek - days to endOfWeek with length = resolution
  */
 function getDataOverTime(data, resolution, endOfWeek, days) {
     const steps = (86400000 * days) / resolution; // calculates step size in ms
@@ -148,7 +176,7 @@ function getAvgDataOverTime(data, from, to) {
     if (length == 0) {
         return 0; // if no data is available, return 0
     }
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i &lt; length; i++) {
         sum += dataFromTo[i][1]; // sums up all data
     }
 
@@ -166,8 +194,8 @@ const App = () => {
             currentDate.toDateString()
         );
     const /** !number */ [currentTempDataHtml, setCurrentTempHtml] = useState();
-    const /** !Array<number> */ [tempChart, setTempChart] = useState([0]);
-    const /** !Array<number> */[tempAvgChart, setTempAvgChart] = useState([0]);
+    const /** !Array&lt;number> */ [tempChart, setTempChart] = useState([0]);
+    const /** !Array&lt;number> */[tempAvgChart, setTempAvgChart] = useState([0]);
     const /** !string */ [heroImg, setHeroImg] = useState(heroImgs.cloudy);
 
     /**
@@ -267,7 +295,6 @@ const App = () => {
         ]);
     };
     /**
-     * @name setLastDay()
      * updates the date in the app to the date before the current date
      * loads the data for the new date
      */
@@ -278,7 +305,6 @@ const App = () => {
         updateData();
     };
     /**
-     * @name setNextDay()
      * updates the date in the app to the date after the current date
      * loads the data for the new date
      */
@@ -297,58 +323,58 @@ const App = () => {
 
     // jsx
     return (
-        <ScrollView
+        &lt;ScrollView
             style={{ backgroundColor: "#809EA1" }}
             snapToInterval={hp("70%")}
             snapToAlignment={"center"}
             disableIntervalMomentum={true}
             snapToEnd={false}
         >
-            <View style={styles.holyWrapper}>
-                <View style={styles.heroWrapper}>
-                    <View style={styles.hero}>
-                        <View style={styles.heroWeather}>
-                            <Image
+            &lt;View style={styles.holyWrapper}>
+                &lt;View style={styles.heroWrapper}>
+                    &lt;View style={styles.hero}>
+                        &lt;View style={styles.heroWeather}>
+                            &lt;Image
                                 style={styles.heroImg}
                                 source={require("./images/" + "cloudy.png")}
                             />
-                            <Text style={styles.heroTemp}>
+                            &lt;Text style={styles.heroTemp}>
                                 {currentTempDataHtml}°C
-                            </Text>
-                        </View>
-                        <View style={styles.weatherSwipeWrapper}>
-                            <View style={styles.weatherSwipe}>
-                                <TouchableOpacity
+                            &lt;/Text>
+                        &lt;/View>
+                        &lt;View style={styles.weatherSwipeWrapper}>
+                            &lt;View style={styles.weatherSwipe}>
+                                &lt;TouchableOpacity
                                     style={styles.weatherSwipeBtn}
                                     onPress={setLastDay}
                                 >
-                                    <Image
+                                    &lt;Image
                                         style={styles.weatherSwipeBtnIconLeft}
                                         source={require("./images/left-arrow.png")}
                                     />
-                                </TouchableOpacity>
-                                <Text style={styles.weatherSwipeText}>
+                                &lt;/TouchableOpacity>
+                                &lt;Text style={styles.weatherSwipeText}>
                                     {currentDateHtml}
-                                </Text>
-                                <TouchableOpacity
+                                &lt;/Text>
+                                &lt;TouchableOpacity
                                     style={styles.weatherSwipeBtn}
                                     onPress={setNextDay}
                                 >
-                                    <Image
+                                    &lt;Image
                                         style={styles.weatherSwipeBtnIconRight}
                                         source={require("./images/right-arrow.png")}
                                     />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                <View style={styles.splitLine}></View>
-                <View style={styles.weatherChartWrapper}>
-                    <View style={styles.weatherChart}>
-                        <Text style={styles.weatherChartTitle}>Temperatur</Text>
-                        <Text style={styles.chartSubtitle}>Historie</Text>
-                        <LineChart
+                                &lt;/TouchableOpacity>
+                            &lt;/View>
+                        &lt;/View>
+                    &lt;/View>
+                &lt;/View>
+                &lt;View style={styles.splitLine}>&lt;/View>
+                &lt;View style={styles.weatherChartWrapper}>
+                    &lt;View style={styles.weatherChart}>
+                        &lt;Text style={styles.weatherChartTitle}>Temperatur&lt;/Text>
+                        &lt;Text style={styles.chartSubtitle}>Historie&lt;/Text>
+                        &lt;LineChart
                             data={{
                                 labels: [
                                     weekDays
@@ -417,8 +443,8 @@ const App = () => {
                                 paddingRight: 40,
                             }}
                         />
-                        <Text style={styles.chartSubtitle}>Durchschnitt</Text>
-                        <BarChart
+                        &lt;Text style={styles.chartSubtitle}>Durchschnitt&lt;/Text>
+                        &lt;BarChart
                             style={{
                                 shadowRadius: 10,
                                 shadowOffset: 30,
@@ -478,11 +504,11 @@ const App = () => {
                             }}
                             showValuesOnTopOfBars
                         />
-                    </View>
-                </View>
-                <View style={styles.splitLine}></View>
-            </View>
-        </ScrollView>
+                    &lt;/View>
+                &lt;/View>
+                &lt;View style={styles.splitLine}>&lt;/View>
+            &lt;/View>
+        &lt;/ScrollView>
     );
 };
 
@@ -608,3 +634,27 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#App">App</a></li><li><a href="global.html#createQueryParametersString">createQueryParametersString</a></li><li><a href="global.html#firstLoad">firstLoad</a></li><li><a href="global.html#getArrayFromVal">getArrayFromVal</a></li><li><a href="global.html#getArrayToVal">getArrayToVal</a></li><li><a href="global.html#getAvgDataOverTime">getAvgDataOverTime</a></li><li><a href="global.html#getData">getData</a></li><li><a href="global.html#getDataOverTime">getDataOverTime</a></li><li><a href="global.html#heroImgs">heroImgs</a></li><li><a href="global.html#reverseSortObject">reverseSortObject</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#styles">styles</a></li><li><a href="global.html#updateData()updatesallconstsusedintheapp">updateData()
+updates all consts used in the app</a></li><li><a href="global.html#weekDays">weekDays</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Sun Dec 12 2021 04:06:16 GMT+0100 (Mitteleuropäische Normalzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
