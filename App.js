@@ -46,7 +46,7 @@ async function getData(path) {
 }
 /**
  *
- * @param {{str: {string}, str: {string}}} params to query (e.g. {'from': '12334321', 'to': '13254567'})
+ * @param {{str: {string}, str: {string}}=} params to query (e.g. {'from': '12334321', 'to': '13254567'})
  * @returns {string} query string to be used in fetch (e.g. 'from=12334321&to=13254567')
  */
 function createQueryParametersString(params) {
@@ -157,7 +157,10 @@ function getAvgDataOverTime(data, from, to) {
 
 /**
  * 
- * @param {{str: string, str: Array<num>, str: Array<num>}} props 
+ * @param {{str: (string), str: Array<num>, str: (Array<num>)}=} props
+ * str: Content the info is about (e.g. "Temperature")
+ * str: history Chart Array
+ * str: avg Data Chart Array
  * @returns rendered weather info component
  */
 const WeatherInfoComponent = (props) => {
