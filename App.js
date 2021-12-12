@@ -156,6 +156,159 @@ function getAvgDataOverTime(data, from, to) {
 }
 
 /**
+ * 
+ * @param {{str: string, str: Array<num>, str: Array<num>}} props 
+ * @returns rendered weather info component
+ */
+const WeatherInfoComponent = (props) => {
+    const section = props.section;
+    const historyChart = props.historyChart;
+    const avgChart = props.avgChart;
+
+    return (
+        <View>
+            <View style={styles.weatherChartWrapper}>
+                <View style={styles.weatherChart}>
+                    <Text style={styles.weatherChartTitle}>{section}</Text>
+                    <Text style={styles.chartSubtitle}>Historie</Text>
+                    <LineChart
+                        data={{
+                            labels: [
+                                weekDays
+                                    .slice(currentDate.getDay() - 6)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 5)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 4)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 3)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 2)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 1)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 0)[0]
+                                    .slice(0, 2),
+                            ],
+                            datasets: [
+                                {
+                                    data: historyChart,
+                                },
+                            ],
+                        }}
+                        width={wp("80%")}
+                        height={160}
+                        yAxisLabel=""
+                        yAxisSuffix="°"
+                        yAxisInterval={1}
+                        withInnerLines={true}
+                        withHorizontalLines={true}
+                        withVerticalLines={false}
+                        chartConfig={{
+                            color: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+
+                            backgroundColor: "#6399D1",
+                            backgroundGradientFrom: "#6399D1",
+                            backgroundGradientTo: "#6399D1",
+                            strokeWidth: 4,
+
+                            decimalPlaces: 0,
+                            labelColor: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+                            style: {
+                                borderRadius: 20,
+                            },
+                        }}
+                        withDots={false}
+                        bezier
+                        segments={5}
+                        style={{
+                            shadowRadius: 10,
+                            shadowOffset: 30,
+                            backgroundColor: "#6399D1",
+                            paddingVertical: 15,
+                            marginVertical: 8,
+                            borderRadius: 20,
+
+                            paddingRight: 40,
+                        }}
+                    />
+                    <Text style={styles.chartSubtitle}>Durchschnitt</Text>
+                    <BarChart
+                        style={{
+                            shadowRadius: 10,
+                            shadowOffset: 30,
+                            backgroundColor: "#6399D1",
+                            paddingVertical: 15,
+                            marginVertical: 8,
+                            borderRadius: 20,
+
+                            paddingRight: 40,
+                        }}
+                        data={{
+                            labels: [
+                                weekDays
+                                    .slice(currentDate.getDay() - 6)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 5)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 4)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 3)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 2)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 1)[0]
+                                    .slice(0, 2),
+                                weekDays
+                                    .slice(currentDate.getDay() - 0)[0]
+                                    .slice(0, 2),
+                            ],
+                            datasets: [
+                                {
+                                    data: avgChart,
+                                },
+                            ],
+                        }}
+                        width={wp("80%")}
+                        height={220}
+                        yAxisLabel=""
+                        yAxisSuffix="°"
+                        chartConfig={{
+                            color: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+
+                            backgroundColor: "#6399D1",
+                            backgroundGradientFrom: "#6399D1",
+                            backgroundGradientTo: "#6399D1",
+                            strokeWidth: 4,
+
+                            decimalPlaces: 0,
+                            labelColor: (opacity = 1) =>
+                                `rgba(255, 255, 255, ${opacity})`,
+                        }}
+                        showValuesOnTopOfBars
+                    />
+                </View>
+            </View>
+            <View style={styles.splitLine}></View>
+        </View>
+    );
+};
+
+/**
  *  @returns jsx - rendered App
  */
 const App = () => {
@@ -167,7 +320,7 @@ const App = () => {
         );
     const /** !number */ [currentTempDataHtml, setCurrentTempHtml] = useState();
     const /** !Array<number> */ [tempChart, setTempChart] = useState([0]);
-    const /** !Array<number> */[tempAvgChart, setTempAvgChart] = useState([0]);
+    const /** !Array<number> */ [tempAvgChart, setTempAvgChart] = useState([0]);
     const /** !string */ [heroImg, setHeroImg] = useState(heroImgs.cloudy);
 
     /**
@@ -344,143 +497,7 @@ const App = () => {
                     </View>
                 </View>
                 <View style={styles.splitLine}></View>
-                <View style={styles.weatherChartWrapper}>
-                    <View style={styles.weatherChart}>
-                        <Text style={styles.weatherChartTitle}>Temperatur</Text>
-                        <Text style={styles.chartSubtitle}>Historie</Text>
-                        <LineChart
-                            data={{
-                                labels: [
-                                    weekDays
-                                        .slice(currentDate.getDay() - 6)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 5)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 4)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 3)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 2)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 1)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 0)[0]
-                                        .slice(0, 2),
-                                ],
-                                datasets: [
-                                    {
-                                        data: tempChart,
-                                    },
-                                ],
-                            }}
-                            width={wp("80%")}
-                            height={160}
-                            yAxisLabel=""
-                            yAxisSuffix="°"
-                            yAxisInterval={1}
-                            withInnerLines={true}
-                            withHorizontalLines={true}
-                            withVerticalLines={false}
-                            chartConfig={{
-                                color: (opacity = 1) =>
-                                    `rgba(255, 255, 255, ${opacity})`,
-
-                                backgroundColor: "#6399D1",
-                                backgroundGradientFrom: "#6399D1",
-                                backgroundGradientTo: "#6399D1",
-                                strokeWidth: 4,
-
-                                decimalPlaces: 0,
-                                labelColor: (opacity = 1) =>
-                                    `rgba(255, 255, 255, ${opacity})`,
-                                style: {
-                                    borderRadius: 20,
-                                },
-                            }}
-                            withDots={false}
-                            bezier
-                            segments={5}
-                            style={{
-                                shadowRadius: 10,
-                                shadowOffset: 30,
-                                backgroundColor: "#6399D1",
-                                paddingVertical: 15,
-                                marginVertical: 8,
-                                borderRadius: 20,
-
-                                paddingRight: 40,
-                            }}
-                        />
-                        <Text style={styles.chartSubtitle}>Durchschnitt</Text>
-                        <BarChart
-                            style={{
-                                shadowRadius: 10,
-                                shadowOffset: 30,
-                                backgroundColor: "#6399D1",
-                                paddingVertical: 15,
-                                marginVertical: 8,
-                                borderRadius: 20,
-
-                                paddingRight: 40,
-                            }}
-                            data={{
-                                labels: [
-                                    weekDays
-                                        .slice(currentDate.getDay() - 6)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 5)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 4)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 3)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 2)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 1)[0]
-                                        .slice(0, 2),
-                                    weekDays
-                                        .slice(currentDate.getDay() - 0)[0]
-                                        .slice(0, 2),
-                                ],
-                                datasets: [
-                                    {
-                                        data: tempAvgChart,
-                                    },
-                                ],
-                            }}
-                            width={wp("80%")}
-                            height={220}
-                            yAxisLabel=""
-                            yAxisSuffix="°"
-                            chartConfig={{
-                                color: (opacity = 1) =>
-                                    `rgba(255, 255, 255, ${opacity})`,
-
-                                backgroundColor: "#6399D1",
-                                backgroundGradientFrom: "#6399D1",
-                                backgroundGradientTo: "#6399D1",
-                                strokeWidth: 4,
-
-                                decimalPlaces: 0,
-                                labelColor: (opacity = 1) =>
-                                    `rgba(255, 255, 255, ${opacity})`,
-                            }}
-                            showValuesOnTopOfBars
-                        />
-                    </View>
-                </View>
-                <View style={styles.splitLine}></View>
+                <WeatherInfoComponent section="Temperatur" historyChart={tempChart} avgChart={tempAvgChart}/>
             </View>
         </ScrollView>
     );
