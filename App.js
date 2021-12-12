@@ -166,7 +166,7 @@ const WeatherInfoComponent = (props) => {
     const avgChart = props.avgChart;
 
     return (
-        <View>
+        <View style={styles.holyWrapper}>
             <View style={styles.weatherChartWrapper}>
                 <View style={styles.weatherChart}>
                     <Text style={styles.weatherChartTitle}>{section}</Text>
