@@ -183,7 +183,7 @@ function getArrayOfAvgDataPerDay(data, days) {
     
 /**
  * 
- * @param {{"section": (string), "historyChart": Array<num>, "avgChart": (Array<num>), "segmentsAvg": (number), "segmentsHistory": (number) "unit": (char)}=} props
+ * @param {{"section": (string), "historyChart": Array<num>, "avgChart": (Array<num>), "segmentsAvg": (number), "segmentsHistory": (number), "unit": (char)}=} props
  * section: Content the info is about (e.g. "Temperature")
  * historyChart: history Chart Array
  * avgChart: avg Data Chart Array
