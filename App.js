@@ -21,6 +21,8 @@ import {
 } from "react-native-responsive-screen";
 import { LineChart, BarChart } from "react-native-chart-kit";
 
+// console.log = () => null // uncomment in production
+
 /**
  * ip address of server
  * @type {string}
