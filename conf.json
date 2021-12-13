@@ -1,0 +1,7 @@
+{
+    "templates": {
+        "outputSourceFiles": true,
+        "syntaxTheme": "dark",
+        "theme": "readable"
+    }
+}
