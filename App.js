@@ -514,7 +514,7 @@ const App = () => {
     return (
         <ScrollView
             style={{ backgroundColor: "#809EA1" }}
-            snapToInterval={hp("70%")}
+            snapToInterval={960}
             snapToAlignment={"center"}
             disableIntervalMomentum={true}
             snapToEnd={false}
