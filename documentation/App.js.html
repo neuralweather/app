@@ -33,12 +33,12 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#App">App</a></li><li><a href="global.html#createQueryParametersString">createQueryParametersString</a></li><li><a href="global.html#firstLoad">firstLoad</a></li><li><a href="global.html#getArrayFromVal">getArrayFromVal</a></li><li><a href="global.html#getArrayOfAvgDataPerDay">getArrayOfAvgDataPerDay</a></li><li><a href="global.html#getArrayToVal">getArrayToVal</a></li><li><a href="global.html#getAvgDataOverTime">getAvgDataOverTime</a></li><li><a href="global.html#getData">getData</a></li><li><a href="global.html#getDataOverTime">getDataOverTime</a></li><li><a href="global.html#heroImgs">heroImgs</a></li><li><a href="global.html#reverseSortObject">reverseSortObject</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#setLastDay()updatesthedateintheapptothedatebeforethecurrentdateloadsthedataforthenewdate">setLastDay()
+					<li><a href="global.html#App">App</a></li><li><a href="global.html#createQueryParametersString">createQueryParametersString</a></li><li><a href="global.html#currentTempDataHtml">currentTempDataHtml</a></li><li><a href="global.html#firstLoad">firstLoad</a></li><li><a href="global.html#getArrayFromVal">getArrayFromVal</a></li><li><a href="global.html#getArrayOfAvgDataPerDay">getArrayOfAvgDataPerDay</a></li><li><a href="global.html#getArrayToVal">getArrayToVal</a></li><li><a href="global.html#getAvgDataOverTime">getAvgDataOverTime</a></li><li><a href="global.html#getData">getData</a></li><li><a href="global.html#getDataOverTime">getDataOverTime</a></li><li><a href="global.html#heroImg">heroImg</a></li><li><a href="global.html#heroImgs">heroImgs</a></li><li><a href="global.html#humidityAvgChart">humidityAvgChart</a></li><li><a href="global.html#humidityChart">humidityChart</a></li><li><a href="global.html#pressureAvgChart">pressureAvgChart</a></li><li><a href="global.html#pressureChart">pressureChart</a></li><li><a href="global.html#rainAvgChart">rainAvgChart</a></li><li><a href="global.html#rainChart">rainChart</a></li><li><a href="global.html#reverseSortObject">reverseSortObject</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#setLastDay()updatesthedateintheapptothedatebeforethecurrentdateloadsthedataforthenewdate">setLastDay()
 updates the date in the app to the date before the current date
 loads the data for the new date</a></li><li><a href="global.html#setNextDay()updatesthedateintheapptothedateafterthecurrentdateloadsthedataforthenewdate">setNextDay()
 updates the date in the app to the date after the current date
-loads the data for the new date</a></li><li><a href="global.html#styles">styles</a></li><li><a href="global.html#updateData()updatesallconstsusedintheapp">updateData()
-updates all consts used in the app</a></li><li><a href="global.html#WeatherInfoComponent">WeatherInfoComponent</a></li><li><a href="global.html#weekDays">weekDays</a></li>
+loads the data for the new date</a></li><li><a href="global.html#styles">styles</a></li><li><a href="global.html#tempAvgChart">tempAvgChart</a></li><li><a href="global.html#tempChart">tempChart</a></li><li><a href="global.html#updateData()updatesallconstsusedintheapp">updateData()
+updates all consts used in the app</a></li><li><a href="global.html#WeatherInfoComponent">WeatherInfoComponent</a></li><li><a href="global.html#weekDays">weekDays</a></li><li><a href="global.html#windAvgChart">windAvgChart</a></li><li><a href="global.html#windChart">windChart</a></li>
 				</ul>
 			</li>
 			
@@ -86,6 +86,7 @@ import React, { StrictMode, useEffect, useState } from "react";
 import {
     View,
     ScrollView,
+    FlatList,
     Image,
     StyleSheet,
     Text,
@@ -97,6 +98,8 @@ import {
     heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { LineChart, BarChart } from "react-native-chart-kit";
+
+// console.log = () => null; // uncomment in production
 
 /**
  * ip address of server
@@ -232,50 +235,50 @@ function getAvgDataOverTime(data, from, to) {
     return sum / length; // sum divided by length = average
 }
 /**
- * 
- * @param {Object} data 
- * @param {int} days 
- * @returns {Array} Array of avg data from now-days to now 
- * 
+ *
+ * @param {Object} data
+ * @param {int} days
+ * @returns {Array} Array of avg data from now-days to now
+ *
  */
 function getArrayOfAvgDataPerDay(data, days) {
-
-        // clones currentDate sets it to the time at 00:00:00
-        // (needed for avg calculation, because avg is calculated from 00:00:00 to 00:00:00)
-        let midNightDate = new Date(currentDate.getTime());
-        midNightDate.setHours(0, 0, 0, 0);
-        let response = [];
-        for (let i = days-1; i >= 0; i--) {
-            response.push(
-                Math.round(getAvgDataOverTime(
+    // clones currentDate sets it to the time at 00:00:00
+    // (needed for avg calculation, because avg is calculated from 00:00:00 to 00:00:00)
+    let midNightDate = new Date(currentDate.getTime());
+    midNightDate.setHours(0, 0, 0, 0);
+    let response = [];
+    for (let i = days - 1; i >= 0; i--) {
+        response.push(
+            Math.round(
+                getAvgDataOverTime(
                     data,
                     midNightDate.getTime() - 86400000 * i,
-                    midNightDate.getTime() - 86400000 * (i-1)
-                )*100)/100 // gets avg data the day x days before currentDate
-                //Math.round(x*100)/100 // rounds to 2 decimals
-            );
-        }
-        return response;
+                    midNightDate.getTime() - 86400000 * (i - 1)
+                ) * 100
+            ) / 100 // gets avg data the day x days before currentDate
+            //Math.round(x*100)/100 // rounds to 2 decimals
+        );
+    }
+    return response;
 }
-    
+
 /**
- * 
- * @param {{"section": (string), "historyChart": Array&lt;num>, "avgChart": (Array&lt;num>), "segmentsAvg": (number), "segmentsHistory": (number), "unit": (char)}=} props
+ * @param {{"section": (string), "historyChart": Array&lt;num>, "avgChart": (Array&lt;num>), "segmentsAvg": (number), "segmentsHistory": (number), "unit": (char)}=} item
  * section: Content the info is about (e.g. "Temperature")
  * historyChart: history Chart Array
  * avgChart: avg Data Chart Array
  * segmentsAvg: number of y segments in the avg chart
  * segmentsHistory: number of y segments in the History chart
  * unit: unit of the data (e.g. "°")
- * @returns rendered weather info component
+ * @returns {JSX} rendered weather info component
  */
-const WeatherInfoComponent = (props) => {
-    const section = props.section;
-    const historyChart = props.historyChart;
-    const avgChart = props.avgChart;
-    const segmentsHistory = props.segmentsHistory;
-    const segmentsAvg = props.segmentsAvg;
-    const unit = props.unit;
+const WeatherInfoComponent = ({ item }) => {
+    const section = item.section;
+    const historyChart = item.historyChart;
+    const avgChart = item.avgChart;
+    const segmentsHistory = item.segmentsHistory;
+    const segmentsAvg = item.segmentsAvg;
+    const unit = item.unit;
 
     return (
         &lt;View style={styles.holyWrapper}>
@@ -421,28 +424,32 @@ const WeatherInfoComponent = (props) => {
     );
 };
 
+/*
+    lets that are used in the app and change (e.g. for Charts)
+    */
+let /** !string */ currentDateHtml = currentDate.toDateString();
+let /** !number */ currentTempDataHtml = undefined;
+let /** !Array&lt;number> */ tempChart = [0];
+let /** !Array&lt;number> */ tempAvgChart = [0];
+let /** !Array&lt;number> */ windChart = [0];
+let /** !Array&lt;number> */ windAvgChart = [0];
+let /** !Array&lt;number> */ pressureChart = [0];
+let /** !Array&lt;number> */ pressureAvgChart = [0];
+let /** !Array&lt;number> */ rainChart = [0];
+let /** !Array&lt;number> */ rainAvgChart = [0];
+let /** !Array&lt;number> */ humidityChart = [0];
+let /** !Array&lt;number> */ humidityAvgChart = [0];
+let /** !string */ heroImg = heroImgs.cloudy;
+
 /**
  *  @returns jsx - rendered App
  */
 const App = () => {
     /*
-    consts that are used in the app and change (e.g. for Charts)
+    if one react hook is updated, the whole app is rerendered (before i used a lot of useState hooks, 
+    so the app rerendered a lot of times, which slowed it down a lot)
     */
-    const /** !string */ [currentDateHtml, setCurrentDateHtml] = useState(
-            currentDate.toDateString()
-        );
-    const /** !number */ [currentTempDataHtml, setCurrentTempHtml] = useState();
-    const /** !Array&lt;number> */ [tempChart, setTempChart] = useState([0]);
-    const /** !Array&lt;number> */ [tempAvgChart, setTempAvgChart] = useState([0]);
-    const /** !Array&lt;number> */ [windChart, setWindChart] = useState([0]);
-    const /** !Array&lt;number> */ [windAvgChart, setWindAvgChart] = useState([0]);
-    const /** !Array&lt;number> */ [pressureChart, setPressureChart] = useState([0]);
-    const /** !Array&lt;number> */ [pressureAvgChart, setPressureAvgChart] = useState([0]);
-    const /** !Array&lt;number> */ [rainChart, setRainChart] = useState([0]);
-    const /** !Array&lt;number> */ [rainAvgChart, setRainAvgChart] = useState([0]);
-    const /** !Array&lt;number> */ [humidityChart, setHumidityChart] = useState([0]);
-    const /** !Array&lt;number> */ [humidityAvgChart, setHumidityAvgChart] = useState([0]);
-    const /** !string */ [heroImg, setHeroImg] = useState(heroImgs.cloudy);
+    const [update, forceUpdate] = useState(0);
 
     /**
      * @name updateData()
@@ -492,72 +499,90 @@ const App = () => {
         try {
             // sets currentTempHtml to the first value of sortedTemperature
             // (the latest)
-            setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
+            currentTempDataHtml = Math.round(sortedTemperature[0][1]);
         } catch (e) {
-            setCurrentTempHtml(0); // if no data is available, set 0
+            currentTempDataHtml = 0; // if no data is available, set 0
         }
-        console.log("updating Charts");
-        setTempChart(
-            getDataOverTime(
+        try {
+            console.log("updating Charts");
+            tempChart = getDataOverTime(
                 sortedTemperature,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setTempAvgChart(getArrayOfAvgDataPerDay(sortedTemperature, 7));
-        setWindChart(
-            getDataOverTime(
+            );
+            tempAvgChart = getArrayOfAvgDataPerDay(sortedTemperature, 7);
+        } catch (e) {
+            console.log("Some Temp Data not available");
+        }
+        try {
+            windChart = getDataOverTime(
                 sortedWind,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setWindAvgChart(getArrayOfAvgDataPerDay(sortedWind, 7));
-        setPressureChart(
-            getDataOverTime(
+            );
+            windAvgChart = getArrayOfAvgDataPerDay(sortedWind, 7);
+        } catch (e) {
+            console.log("Some Wind Data not available");
+        }
+        try {
+            pressureChart = getDataOverTime(
                 sortedPressure,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setPressureAvgChart(getArrayOfAvgDataPerDay(sortedPressure, 7));
-        setRainChart(
-            getDataOverTime(
+            );
+
+            pressureAvgChart = getArrayOfAvgDataPerDay(sortedPressure, 7);
+        } catch (e) {
+            console.log("Some Pressure Data not available");
+        }
+        try {
+            rainChart = getDataOverTime(
                 sortedRain,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setRainAvgChart(getArrayOfAvgDataPerDay(sortedRain, 7));
-        setHumidityChart(
-            getDataOverTime(
+            );
+
+            rainAvgChart = getArrayOfAvgDataPerDay(sortedRain, 7);
+        } catch (e) {
+            console.log("Some Rain Data not available");
+        }
+        try {
+            humidityChart = getDataOverTime(
                 sortedHumidity,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setHumidityAvgChart(getArrayOfAvgDataPerDay(sortedHumidity, 7));
+            );
 
-        // sets the hero image
-        if (sortedTemperature[0][1] > 20 &amp;&amp; sortedRain[0][1] &lt; 1000) {
-            setHeroImg(heroImgs.sunny);
+            humidityAvgChart = getArrayOfAvgDataPerDay(sortedHumidity, 7);
+        } catch (e) {
+            console.log("Some Humidity Data not available");
         }
-        else if (sortedRain[0][1] > 1000 &amp;&amp; sortedTemperature[0][1] > -2.2 &amp;&amp; sortedTemperature[0][1] &lt; 2.2) {
-            setHeroImg(heroImgs.snowy);
-        }
-        else if (sortedRain[0][1] > 1000) {
-            setHeroImg(heroImgs.rainy);
-        }
-        else {
-            setHeroImg(heroImgs.cloudy);
+        try {
+            // sets the hero image
+            if (sortedTemperature[0][1] > 20 &amp;&amp; sortedRain[0][1] &lt; 1000) {
+                heroImg = heroImgs.sunny;
+            } else if (
+                sortedRain[0][1] > 1000 &amp;&amp;
+                sortedTemperature[0][1] > -2.2 &amp;&amp;
+                sortedTemperature[0][1] &lt; 2.2
+            ) {
+                heroImg = heroImgs.snowy;
+            } else if (sortedRain[0][1] > 1000) {
+                heroImg = heroImgs.rainy;
+            } else {
+                heroImg = heroImgs.cloudy;
+            }
+        } catch (e) {
+            console.log("Error setting hero-image - Some Data not available");
         }
 
-    }
+        forceUpdate(update + 1);
+    };
     /**
      * @name setLastDay()
      * updates the date in the app to the date before the current date
@@ -566,8 +591,8 @@ const App = () => {
     const setLastDay = () => {
         console.log("updating the apps data to the last day");
         setDay(-1);
-        setCurrentDateHtml(currentDate.toDateString());
-        updateData();
+        currentDateHtml = currentDate.toDateString();
+        updateData()
     };
     /**
      * @name setNextDay()
@@ -577,73 +602,127 @@ const App = () => {
     const setNextDay = () => {
         console.log("updating the apps data to the next day");
         setDay(1);
-        setCurrentDateHtml(currentDate.toDateString());
-        updateData();
+        currentDateHtml = currentDate.toDateString();
+        updateData()
     };
 
     // if the app is started for the first time, load the data
     if (firstLoad) {
-        updateData();
         firstLoad = false;
+        updateData()
     }
 
+    /**
+     * object which the FlatList renders
+     */
+    const infoData = [
+        {
+            id: 1,
+            section: "Temperatur",
+            historyChart: tempChart,
+            avgChart: tempAvgChart,
+            unit: "°",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 2,
+            section: "Regenmenge",
+            historyChart: rainChart,
+            avgChart: rainAvgChart,
+            unit: "",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 3,
+            section: "Luftfeuchtigkeit",
+            historyChart: humidityChart,
+            avgChart: humidityAvgChart,
+            unit: "%",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 4,
+            section: "Luftdruck",
+            historyChart: pressureChart,
+            avgChart: pressureAvgChart,
+            unit: "hPa",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 5,
+            section: "Wind-\ngeschwindigkeit",
+            historyChart: windChart,
+            avgChart: windAvgChart,
+            unit: "km/h",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+    ];
+
+    // snapToInterval={960}
+    // snapToAlignment={"center"}
+    // disableIntervalMomentum={true}
+    // snapToEnd={false}
     // jsx
     return (
-        &lt;ScrollView
-            style={{ backgroundColor: "#809EA1" }}
-            snapToInterval={960}
-            snapToAlignment={"center"}
-            disableIntervalMomentum={true}
-            snapToEnd={false}
-        >
-            &lt;View style={styles.holyWrapper}>
-                &lt;View style={styles.heroWrapper}>
-                    &lt;View style={styles.hero}>
-                        &lt;View style={styles.heroWeather}>
-                            &lt;Image
-                                style={styles.heroImg}
-                                source={heroImg}
-                            />
-                            &lt;Text style={styles.heroTemp}>
-                                {currentTempDataHtml}°C
-                            &lt;/Text>
-                        &lt;/View>
-                        &lt;View style={styles.weatherSwipeWrapper}>
-                            &lt;View style={styles.weatherSwipe}>
-                                &lt;TouchableOpacity
-                                    style={styles.weatherSwipeBtn}
-                                    onPress={setLastDay}
-                                >
-                                    &lt;Image
-                                        style={styles.weatherSwipeBtnIconLeft}
-                                        source={require("./images/left-arrow.png")}
-                                    />
-                                &lt;/TouchableOpacity>
-                                &lt;Text style={styles.weatherSwipeText}>
-                                    {currentDateHtml}
+        &lt;FlatList
+            ListHeaderComponent={
+                &lt;View style={styles.holyWrapper}>
+                    &lt;View style={styles.heroWrapper}>
+                        &lt;View style={styles.hero}>
+                            &lt;View style={styles.heroWeather}>
+                                &lt;Image
+                                    style={styles.heroImg}
+                                    source={heroImg}
+                                />
+                                &lt;Text style={styles.heroTemp}>
+                                    {currentTempDataHtml}°C
                                 &lt;/Text>
-                                &lt;TouchableOpacity
-                                    style={styles.weatherSwipeBtn}
-                                    onPress={setNextDay}
-                                >
-                                    &lt;Image
-                                        style={styles.weatherSwipeBtnIconRight}
-                                        source={require("./images/right-arrow.png")}
-                                    />
-                                &lt;/TouchableOpacity>
+                            &lt;/View>
+                            &lt;View style={styles.weatherSwipeWrapper}>
+                                &lt;View style={styles.weatherSwipe}>
+                                    &lt;TouchableOpacity
+                                        style={styles.weatherSwipeBtn}
+                                        onPress={setLastDay}
+                                    >
+                                        &lt;Image
+                                            style={
+                                                styles.weatherSwipeBtnIconLeft
+                                            }
+                                            source={require("./images/left-arrow.png")}
+                                        />
+                                    &lt;/TouchableOpacity>
+                                    &lt;Text style={styles.weatherSwipeText}>
+                                        {currentDateHtml}
+                                    &lt;/Text>
+                                    &lt;TouchableOpacity
+                                        style={styles.weatherSwipeBtn}
+                                        onPress={setNextDay}
+                                    >
+                                        &lt;Image
+                                            style={
+                                                styles.weatherSwipeBtnIconRight
+                                            }
+                                            source={require("./images/right-arrow.png")}
+                                        />
+                                    &lt;/TouchableOpacity>
+                                &lt;/View>
                             &lt;/View>
                         &lt;/View>
                     &lt;/View>
+                    &lt;View style={styles.splitLine}>&lt;/View>
                 &lt;/View>
-                &lt;View style={styles.splitLine}>&lt;/View>
-                &lt;WeatherInfoComponent section="Temperatur" historyChart={tempChart} avgChart={tempAvgChart} unit="°" segmentsAvg={3} segmentsHistory={5}/>
-                &lt;WeatherInfoComponent section="Regen" historyChart={rainChart} avgChart={rainAvgChart} unit="" segmentsAvg={2} segmentsHistory={2}/>
-                &lt;WeatherInfoComponent section="Luftfeuchtigkeit" historyChart={humidityChart} avgChart={humidityAvgChart} unit="%" segmentsAvg={3} segmentsHistory={5}/>
-                &lt;WeatherInfoComponent section="Luftdruck" historyChart={pressureChart} avgChart={pressureAvgChart} unit="hPa" segmentsAvg={3} segmentsHistory={5}/>
-                &lt;WeatherInfoComponent section={"Wind-\ngeschwindigkeit"} historyChart={windChart} avgChart={windAvgChart} unit="km/h" segmentsAvg={3} segmentsHistory={5}/>
-
-            &lt;/View>
-        &lt;/ScrollView>
+            }
+            style={{ backgroundColor: "#809EA1" }}
+            data={infoData}
+            renderItem={WeatherInfoComponent}
+            keyExtractor={(item) => item.id}
+            initialNumToRender={1}
+        />
     );
 };
 
@@ -810,7 +889,7 @@ export default App;
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a>
 	
-		on 2021-12-13T18:56:18+01:00
+		on 2021-12-14T00:32:58+01:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

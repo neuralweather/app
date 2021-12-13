@@ -9,6 +9,7 @@ import React, { StrictMode, useEffect, useState } from "react";
 import {
     View,
     ScrollView,
+    FlatList,
     Image,
     StyleSheet,
     Text,
@@ -21,13 +22,13 @@ import {
 } from "react-native-responsive-screen";
 import { LineChart, BarChart } from "react-native-chart-kit";
 
-// console.log = () => null // uncomment in production
+// console.log = () => null; // uncomment in production
 
 /**
  * ip address of server
  * @type {string}
  */
-const server = "http://127.0.0.1:8080/";
+const server = "http://192.168.178.34:8080/";
 
 /**
  * checks if app is rendered for the first time
@@ -157,50 +158,50 @@ function getAvgDataOverTime(data, from, to) {
     return sum / length; // sum divided by length = average
 }
 /**
- * 
- * @param {Object} data 
- * @param {int} days 
- * @returns {Array} Array of avg data from now-days to now 
- * 
+ *
+ * @param {Object} data
+ * @param {int} days
+ * @returns {Array} Array of avg data from now-days to now
+ *
  */
 function getArrayOfAvgDataPerDay(data, days) {
-
-        // clones currentDate sets it to the time at 00:00:00
-        // (needed for avg calculation, because avg is calculated from 00:00:00 to 00:00:00)
-        let midNightDate = new Date(currentDate.getTime());
-        midNightDate.setHours(0, 0, 0, 0);
-        let response = [];
-        for (let i = days-1; i >= 0; i--) {
-            response.push(
-                Math.round(getAvgDataOverTime(
+    // clones currentDate sets it to the time at 00:00:00
+    // (needed for avg calculation, because avg is calculated from 00:00:00 to 00:00:00)
+    let midNightDate = new Date(currentDate.getTime());
+    midNightDate.setHours(0, 0, 0, 0);
+    let response = [];
+    for (let i = days - 1; i >= 0; i--) {
+        response.push(
+            Math.round(
+                getAvgDataOverTime(
                     data,
                     midNightDate.getTime() - 86400000 * i,
-                    midNightDate.getTime() - 86400000 * (i-1)
-                )*100)/100 // gets avg data the day x days before currentDate
-                //Math.round(x*100)/100 // rounds to 2 decimals
-            );
-        }
-        return response;
+                    midNightDate.getTime() - 86400000 * (i - 1)
+                ) * 100
+            ) / 100 // gets avg data the day x days before currentDate
+            //Math.round(x*100)/100 // rounds to 2 decimals
+        );
+    }
+    return response;
 }
-    
+
 /**
- * 
- * @param {{"section": (string), "historyChart": Array<num>, "avgChart": (Array<num>), "segmentsAvg": (number), "segmentsHistory": (number), "unit": (char)}=} props
+ * @param {{"section": (string), "historyChart": Array<num>, "avgChart": (Array<num>), "segmentsAvg": (number), "segmentsHistory": (number), "unit": (char)}=} item
  * section: Content the info is about (e.g. "Temperature")
  * historyChart: history Chart Array
  * avgChart: avg Data Chart Array
  * segmentsAvg: number of y segments in the avg chart
  * segmentsHistory: number of y segments in the History chart
  * unit: unit of the data (e.g. "°")
- * @returns rendered weather info component
+ * @returns {JSX} rendered weather info component
  */
-const WeatherInfoComponent = (props) => {
-    const section = props.section;
-    const historyChart = props.historyChart;
-    const avgChart = props.avgChart;
-    const segmentsHistory = props.segmentsHistory;
-    const segmentsAvg = props.segmentsAvg;
-    const unit = props.unit;
+const WeatherInfoComponent = ({ item }) => {
+    const section = item.section;
+    const historyChart = item.historyChart;
+    const avgChart = item.avgChart;
+    const segmentsHistory = item.segmentsHistory;
+    const segmentsAvg = item.segmentsAvg;
+    const unit = item.unit;
 
     return (
         <View style={styles.holyWrapper}>
@@ -346,28 +347,32 @@ const WeatherInfoComponent = (props) => {
     );
 };
 
+/*
+    lets that are used in the app and change (e.g. for Charts)
+    */
+let /** !string */ currentDateHtml = currentDate.toDateString();
+let /** !number */ currentTempDataHtml = undefined;
+let /** !Array<number> */ tempChart = [0];
+let /** !Array<number> */ tempAvgChart = [0];
+let /** !Array<number> */ windChart = [0];
+let /** !Array<number> */ windAvgChart = [0];
+let /** !Array<number> */ pressureChart = [0];
+let /** !Array<number> */ pressureAvgChart = [0];
+let /** !Array<number> */ rainChart = [0];
+let /** !Array<number> */ rainAvgChart = [0];
+let /** !Array<number> */ humidityChart = [0];
+let /** !Array<number> */ humidityAvgChart = [0];
+let /** !string */ heroImg = heroImgs.cloudy;
+
 /**
  *  @returns jsx - rendered App
  */
 const App = () => {
     /*
-    consts that are used in the app and change (e.g. for Charts)
+    if one react hook is updated, the whole app is rerendered (before i used a lot of useState hooks, 
+    so the app rerendered a lot of times, which slowed it down a lot)
     */
-    const /** !string */ [currentDateHtml, setCurrentDateHtml] = useState(
-            currentDate.toDateString()
-        );
-    const /** !number */ [currentTempDataHtml, setCurrentTempHtml] = useState();
-    const /** !Array<number> */ [tempChart, setTempChart] = useState([0]);
-    const /** !Array<number> */ [tempAvgChart, setTempAvgChart] = useState([0]);
-    const /** !Array<number> */ [windChart, setWindChart] = useState([0]);
-    const /** !Array<number> */ [windAvgChart, setWindAvgChart] = useState([0]);
-    const /** !Array<number> */ [pressureChart, setPressureChart] = useState([0]);
-    const /** !Array<number> */ [pressureAvgChart, setPressureAvgChart] = useState([0]);
-    const /** !Array<number> */ [rainChart, setRainChart] = useState([0]);
-    const /** !Array<number> */ [rainAvgChart, setRainAvgChart] = useState([0]);
-    const /** !Array<number> */ [humidityChart, setHumidityChart] = useState([0]);
-    const /** !Array<number> */ [humidityAvgChart, setHumidityAvgChart] = useState([0]);
-    const /** !string */ [heroImg, setHeroImg] = useState(heroImgs.cloudy);
+    const [update, forceUpdate] = useState(0);
 
     /**
      * @name updateData()
@@ -417,72 +422,90 @@ const App = () => {
         try {
             // sets currentTempHtml to the first value of sortedTemperature
             // (the latest)
-            setCurrentTempHtml(Math.round(sortedTemperature[0][1]));
+            currentTempDataHtml = Math.round(sortedTemperature[0][1]);
         } catch (e) {
-            setCurrentTempHtml(0); // if no data is available, set 0
+            currentTempDataHtml = 0; // if no data is available, set 0
         }
-        console.log("updating Charts");
-        setTempChart(
-            getDataOverTime(
+        try {
+            console.log("updating Charts");
+            tempChart = getDataOverTime(
                 sortedTemperature,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setTempAvgChart(getArrayOfAvgDataPerDay(sortedTemperature, 7));
-        setWindChart(
-            getDataOverTime(
+            );
+            tempAvgChart = getArrayOfAvgDataPerDay(sortedTemperature, 7);
+        } catch (e) {
+            console.log("Some Temp Data not available");
+        }
+        try {
+            windChart = getDataOverTime(
                 sortedWind,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setWindAvgChart(getArrayOfAvgDataPerDay(sortedWind, 7));
-        setPressureChart(
-            getDataOverTime(
+            );
+            windAvgChart = getArrayOfAvgDataPerDay(sortedWind, 7);
+        } catch (e) {
+            console.log("Some Wind Data not available");
+        }
+        try {
+            pressureChart = getDataOverTime(
                 sortedPressure,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setPressureAvgChart(getArrayOfAvgDataPerDay(sortedPressure, 7));
-        setRainChart(
-            getDataOverTime(
+            );
+
+            pressureAvgChart = getArrayOfAvgDataPerDay(sortedPressure, 7);
+        } catch (e) {
+            console.log("Some Pressure Data not available");
+        }
+        try {
+            rainChart = getDataOverTime(
                 sortedRain,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setRainAvgChart(getArrayOfAvgDataPerDay(sortedRain, 7));
-        setHumidityChart(
-            getDataOverTime(
+            );
+
+            rainAvgChart = getArrayOfAvgDataPerDay(sortedRain, 7);
+        } catch (e) {
+            console.log("Some Rain Data not available");
+        }
+        try {
+            humidityChart = getDataOverTime(
                 sortedHumidity,
                 40 /* resolution */,
                 currentDate.getTime(),
                 7 /* over x days */
-            )
-        );
-        setHumidityAvgChart(getArrayOfAvgDataPerDay(sortedHumidity, 7));
+            );
 
-        // sets the hero image
-        if (sortedTemperature[0][1] > 20 && sortedRain[0][1] < 1000) {
-            setHeroImg(heroImgs.sunny);
+            humidityAvgChart = getArrayOfAvgDataPerDay(sortedHumidity, 7);
+        } catch (e) {
+            console.log("Some Humidity Data not available");
         }
-        else if (sortedRain[0][1] > 1000 && sortedTemperature[0][1] > -2.2 && sortedTemperature[0][1] < 2.2) {
-            setHeroImg(heroImgs.snowy);
-        }
-        else if (sortedRain[0][1] > 1000) {
-            setHeroImg(heroImgs.rainy);
-        }
-        else {
-            setHeroImg(heroImgs.cloudy);
+        try {
+            // sets the hero image
+            if (sortedTemperature[0][1] > 20 && sortedRain[0][1] < 1000) {
+                heroImg = heroImgs.sunny;
+            } else if (
+                sortedRain[0][1] > 1000 &&
+                sortedTemperature[0][1] > -2.2 &&
+                sortedTemperature[0][1] < 2.2
+            ) {
+                heroImg = heroImgs.snowy;
+            } else if (sortedRain[0][1] > 1000) {
+                heroImg = heroImgs.rainy;
+            } else {
+                heroImg = heroImgs.cloudy;
+            }
+        } catch (e) {
+            console.log("Error setting hero-image - Some Data not available");
         }
 
-    }
+        forceUpdate(update + 1);
+    };
     /**
      * @name setLastDay()
      * updates the date in the app to the date before the current date
@@ -491,8 +514,8 @@ const App = () => {
     const setLastDay = () => {
         console.log("updating the apps data to the last day");
         setDay(-1);
-        setCurrentDateHtml(currentDate.toDateString());
-        updateData();
+        currentDateHtml = currentDate.toDateString();
+        updateData()
     };
     /**
      * @name setNextDay()
@@ -502,73 +525,127 @@ const App = () => {
     const setNextDay = () => {
         console.log("updating the apps data to the next day");
         setDay(1);
-        setCurrentDateHtml(currentDate.toDateString());
-        updateData();
+        currentDateHtml = currentDate.toDateString();
+        updateData()
     };
 
     // if the app is started for the first time, load the data
     if (firstLoad) {
-        updateData();
         firstLoad = false;
+        updateData()
     }
 
+    /**
+     * object which the FlatList renders
+     */
+    const infoData = [
+        {
+            id: 1,
+            section: "Temperatur",
+            historyChart: tempChart,
+            avgChart: tempAvgChart,
+            unit: "°",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 2,
+            section: "Regenmenge",
+            historyChart: rainChart,
+            avgChart: rainAvgChart,
+            unit: "",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 3,
+            section: "Luftfeuchtigkeit",
+            historyChart: humidityChart,
+            avgChart: humidityAvgChart,
+            unit: "%",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 4,
+            section: "Luftdruck",
+            historyChart: pressureChart,
+            avgChart: pressureAvgChart,
+            unit: "hPa",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+        {
+            id: 5,
+            section: "Wind-\ngeschwindigkeit",
+            historyChart: windChart,
+            avgChart: windAvgChart,
+            unit: "km/h",
+            segmentsAvg: 3,
+            segmentsHistory: 5,
+        },
+    ];
+
+    // snapToInterval={960}
+    // snapToAlignment={"center"}
+    // disableIntervalMomentum={true}
+    // snapToEnd={false}
     // jsx
     return (
-        <ScrollView
-            style={{ backgroundColor: "#809EA1" }}
-            snapToInterval={960}
-            snapToAlignment={"center"}
-            disableIntervalMomentum={true}
-            snapToEnd={false}
-        >
-            <View style={styles.holyWrapper}>
-                <View style={styles.heroWrapper}>
-                    <View style={styles.hero}>
-                        <View style={styles.heroWeather}>
-                            <Image
-                                style={styles.heroImg}
-                                source={heroImg}
-                            />
-                            <Text style={styles.heroTemp}>
-                                {currentTempDataHtml}°C
-                            </Text>
-                        </View>
-                        <View style={styles.weatherSwipeWrapper}>
-                            <View style={styles.weatherSwipe}>
-                                <TouchableOpacity
-                                    style={styles.weatherSwipeBtn}
-                                    onPress={setLastDay}
-                                >
-                                    <Image
-                                        style={styles.weatherSwipeBtnIconLeft}
-                                        source={require("./images/left-arrow.png")}
-                                    />
-                                </TouchableOpacity>
-                                <Text style={styles.weatherSwipeText}>
-                                    {currentDateHtml}
+        <FlatList
+            ListHeaderComponent={
+                <View style={styles.holyWrapper}>
+                    <View style={styles.heroWrapper}>
+                        <View style={styles.hero}>
+                            <View style={styles.heroWeather}>
+                                <Image
+                                    style={styles.heroImg}
+                                    source={heroImg}
+                                />
+                                <Text style={styles.heroTemp}>
+                                    {currentTempDataHtml}°C
                                 </Text>
-                                <TouchableOpacity
-                                    style={styles.weatherSwipeBtn}
-                                    onPress={setNextDay}
-                                >
-                                    <Image
-                                        style={styles.weatherSwipeBtnIconRight}
-                                        source={require("./images/right-arrow.png")}
-                                    />
-                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.weatherSwipeWrapper}>
+                                <View style={styles.weatherSwipe}>
+                                    <TouchableOpacity
+                                        style={styles.weatherSwipeBtn}
+                                        onPress={setLastDay}
+                                    >
+                                        <Image
+                                            style={
+                                                styles.weatherSwipeBtnIconLeft
+                                            }
+                                            source={require("./images/left-arrow.png")}
+                                        />
+                                    </TouchableOpacity>
+                                    <Text style={styles.weatherSwipeText}>
+                                        {currentDateHtml}
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={styles.weatherSwipeBtn}
+                                        onPress={setNextDay}
+                                    >
+                                        <Image
+                                            style={
+                                                styles.weatherSwipeBtnIconRight
+                                            }
+                                            source={require("./images/right-arrow.png")}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     </View>
+                    <View style={styles.splitLine}></View>
                 </View>
-                <View style={styles.splitLine}></View>
-                <WeatherInfoComponent section="Temperatur" historyChart={tempChart} avgChart={tempAvgChart} unit="°" segmentsAvg={3} segmentsHistory={5}/>
-                <WeatherInfoComponent section="Regen" historyChart={rainChart} avgChart={rainAvgChart} unit="" segmentsAvg={2} segmentsHistory={2}/>
-                <WeatherInfoComponent section="Luftfeuchtigkeit" historyChart={humidityChart} avgChart={humidityAvgChart} unit="%" segmentsAvg={3} segmentsHistory={5}/>
-                <WeatherInfoComponent section="Luftdruck" historyChart={pressureChart} avgChart={pressureAvgChart} unit="hPa" segmentsAvg={3} segmentsHistory={5}/>
-                <WeatherInfoComponent section={"Wind-\ngeschwindigkeit"} historyChart={windChart} avgChart={windAvgChart} unit="km/h" segmentsAvg={3} segmentsHistory={5}/>
-
-            </View>
-        </ScrollView>
+            }
+            style={{ backgroundColor: "#809EA1" }}
+            data={infoData}
+            renderItem={WeatherInfoComponent}
+            keyExtractor={(item) => item.id}
+            initialNumToRender={1}
+        />
     );
 };
 
