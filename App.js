@@ -170,11 +170,12 @@ function getArrayOfAvgDataPerDay(data, days) {
         let response = [];
         for (let i = days-1; i >= 0; i--) {
             response.push(
-                getAvgDataOverTime(
+                Math.round(getAvgDataOverTime(
                     data,
                     midNightDate.getTime() - 86400000 * i,
                     midNightDate.getTime() - 86400000 * (i-1)
-                ), // gets avg data the day x days before currentDate
+                )*100)/100 // gets avg data the day x days before currentDate
+                //Math.round(x*100)/100 // rounds to 2 decimals
             );
         }
         return response;
@@ -399,7 +400,7 @@ const App = () => {
             ] = i.temperature;
             weatherDataTemp.humidity[i.timestamp * 1000] = i.humidity;
             weatherDataTemp.pressure[i.timestamp * 1000] = i.pressure;
-            weatherDataTemp.wind[i.timestamp * 1000] = i.wind;
+            weatherDataTemp.wind[i.timestamp * 1000] = i.windspeed;
             weatherDataTemp.rain[i.timestamp * 1000] = i.rain;
         }
 
