@@ -5,10 +5,9 @@
 
 "use strict";
 
-import React, { StrictMode, useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     View,
-    ScrollView,
     FlatList,
     Image,
     StyleSheet,
