@@ -396,6 +396,7 @@ const App = () => {
             weatherData = await getData("data?" + url);
         } catch (e) {
             Alert.alert("Konnte keine Verbindung zum Server herstellen!");
+            console.log("Keine Verbindung zum Server");
             return;
         }
 
@@ -450,7 +451,10 @@ const App = () => {
 
         try {
             // sets the hero image
-            if (weatherDataTemp.temperature.sorted[0][1] > 20 && weatherDataTemp.rain.sorted[0][1] < 1000) {
+            if (
+                weatherDataTemp.temperature.sorted[0][1] > 20 &&
+                weatherDataTemp.rain.sorted[0][1] < 1000
+            ) {
                 heroImg = heroImgs.sunny;
             } else if (
                 weatherDataTemp.rain.sorted[0][1] > 1000 &&
@@ -506,6 +510,10 @@ const App = () => {
     // jsx
     return (
         <FlatList
+            snapToInterval={960}
+            snapToAlignment={"center"}
+            disableIntervalMomentum={true}
+            snapToEnd={false}
             ListHeaderComponent={
                 <View style={styles.holyWrapper}>
                     <View style={styles.heroWrapper}>
