@@ -21,14 +21,11 @@ import {
     heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { LineChart, BarChart } from "react-native-chart-kit";
+import { config, server, production } from "./config.js";
 
-// console.log = () => null; // uncomment in production
-
-/**
- * ip address of server
- * @type {string}
- */
-const server = "http://192.168.178.34:8080/";
+if (production) {
+    console.log = () => null; // uncomment in production
+}
 
 /**
  * checks if app is rendered for the first time
@@ -348,21 +345,31 @@ const WeatherInfoComponent = ({ item }) => {
 };
 
 /*
-    lets that are used in the app and change (e.g. for Charts)
-    */
+    lets that are used in the app and change (e.g. for displaying the current temp)
+*/
 let /** !string */ currentDateHtml = currentDate.toDateString();
 let /** !number */ currentTempDataHtml = undefined;
-let /** !Array<number> */ tempChart = [0];
-let /** !Array<number> */ tempAvgChart = [0];
-let /** !Array<number> */ windChart = [0];
-let /** !Array<number> */ windAvgChart = [0];
-let /** !Array<number> */ pressureChart = [0];
-let /** !Array<number> */ pressureAvgChart = [0];
-let /** !Array<number> */ rainChart = [0];
-let /** !Array<number> */ rainAvgChart = [0];
-let /** !Array<number> */ humidityChart = [0];
-let /** !Array<number> */ humidityAvgChart = [0];
 let /** !string */ heroImg = heroImgs.cloudy;
+
+/**
+ * object which the FlatList renders
+ * object which the App fetches for
+ */
+const infoData = [];
+
+// config.js to get the data to fetch
+// loop through and append to infoData
+for (const el of config) {
+    infoData.push({
+        id: el.id,
+        section: el.title,
+        historyChart: [0],
+        avgChart: [0],
+        unit: el.unit,
+        segmentsAvg: 3,
+        segmentsHistory: 5,
+    });
+}
 
 /**
  *  @returns jsx - rendered App
@@ -393,98 +400,55 @@ const App = () => {
             return;
         }
 
-        let weatherDataTemp = {
-            temperature: {},
-            humidity: {},
-            pressure: {},
-            wind: {},
-            rain: {},
-        };
-        // loops through every object (timestamp) of weatherData and splits the categories into its own object
-        for (const i of weatherData) {
-            weatherDataTemp.temperature[
-                i.timestamp * 1000 /* utcTimestamp in s to ms */
-            ] = i.temperature;
-            weatherDataTemp.humidity[i.timestamp * 1000] = i.humidity;
-            weatherDataTemp.pressure[i.timestamp * 1000] = i.pressure;
-            weatherDataTemp.wind[i.timestamp * 1000] = i.windspeed;
-            weatherDataTemp.rain[i.timestamp * 1000] = i.rain;
+        let weatherDataTemp = {};
+
+        for (const i of infoData) {
+            // create Object for every "category" to be display
+            weatherDataTemp[i.id] = { data: {}, sorted: {} };
         }
 
-        const sortedTemperature = reverseSortObject(
-            weatherDataTemp.temperature
-        ); // sorts temperature object by its keys and reverses it (needed multiple times below)
-        const sortedHumidity = reverseSortObject(weatherDataTemp.humidity);
-        const sortedPressure = reverseSortObject(weatherDataTemp.pressure);
-        const sortedWind = reverseSortObject(weatherDataTemp.wind);
-        const sortedRain = reverseSortObject(weatherDataTemp.rain);
+        // loops through every object (timestamp) of weatherData (fetched data) and splits the categories into its the objects
+        for (const k of weatherData) {
+            for (const j of Object.keys(weatherDataTemp)) {
+                weatherDataTemp[j].data[
+                    k.timestamp * 1000 /* utcTimestamp in s to ms */
+                ] = k[j];
+            }
+        }
+        for (const l of Object.keys(weatherDataTemp)) {
+            weatherDataTemp[l]["sorted"] = reverseSortObject(
+                weatherDataTemp[l].data
+            );
+            // sorts temperature object by its keys and reverses it (needed multiple times below)
+        }
 
         try {
             // sets currentTempHtml to the first value of sortedTemperature
             // (the latest)
-            currentTempDataHtml = Math.round(sortedTemperature[0][1]);
+            currentTempDataHtml = Math.round(
+                weatherDataTemp.temperature.sorted[0][1]
+            );
         } catch (e) {
             currentTempDataHtml = 0; // if no data is available, set 0
         }
-        try {
-            console.log("updating Charts");
-            tempChart = getDataOverTime(
-                sortedTemperature,
-                40 /* resolution */,
-                currentDate.getTime(),
-                7 /* over x days */
-            );
-            tempAvgChart = getArrayOfAvgDataPerDay(sortedTemperature, 7);
-        } catch (e) {
-            console.log("Some Temp Data not available");
+        for (const m of infoData) {
+            console.log("updating " + m + "charts");
+            try {
+                m.historyChart = getDataOverTime(
+                    weatherDataTemp[m.id].sorted,
+                    40 /* resolution */,
+                    currentDate.getTime(),
+                    7 /* over x days */
+                );
+                m.avgChart = getArrayOfAvgDataPerDay(
+                    weatherDataTemp[m.id].sorted,
+                    7 /* over x days */
+                );
+            } catch (e) {
+                console.log("error in updating Charts: " + m);
+            }
         }
-        try {
-            windChart = getDataOverTime(
-                sortedWind,
-                40 /* resolution */,
-                currentDate.getTime(),
-                7 /* over x days */
-            );
-            windAvgChart = getArrayOfAvgDataPerDay(sortedWind, 7);
-        } catch (e) {
-            console.log("Some Wind Data not available");
-        }
-        try {
-            pressureChart = getDataOverTime(
-                sortedPressure,
-                40 /* resolution */,
-                currentDate.getTime(),
-                7 /* over x days */
-            );
 
-            pressureAvgChart = getArrayOfAvgDataPerDay(sortedPressure, 7);
-        } catch (e) {
-            console.log("Some Pressure Data not available");
-        }
-        try {
-            rainChart = getDataOverTime(
-                sortedRain,
-                40 /* resolution */,
-                currentDate.getTime(),
-                7 /* over x days */
-            );
-
-            rainAvgChart = getArrayOfAvgDataPerDay(sortedRain, 7);
-        } catch (e) {
-            console.log("Some Rain Data not available");
-        }
-        try {
-            humidityChart = getDataOverTime(
-                sortedHumidity,
-                40 /* resolution */,
-                currentDate.getTime(),
-                7 /* over x days */
-            );
-
-            humidityAvgChart = getArrayOfAvgDataPerDay(sortedHumidity, 7);
-        } catch (e) {
-            console.log("Some Humidity Data not available");
-        }
         try {
             // sets the hero image
             if (sortedTemperature[0][1] > 20 && sortedRain[0][1] < 1000) {
@@ -502,6 +466,7 @@ const App = () => {
             }
         } catch (e) {
             console.log("Error setting hero-image - Some Data not available");
+            heroImg = heroImgs.cloudy;
         }
 
         forceUpdate(update + 1);
@@ -515,7 +480,7 @@ const App = () => {
         console.log("updating the apps data to the last day");
         setDay(-1);
         currentDateHtml = currentDate.toDateString();
-        updateData()
+        updateData();
     };
     /**
      * @name setNextDay()
@@ -526,65 +491,14 @@ const App = () => {
         console.log("updating the apps data to the next day");
         setDay(1);
         currentDateHtml = currentDate.toDateString();
-        updateData()
+        updateData();
     };
 
     // if the app is started for the first time, load the data
     if (firstLoad) {
         firstLoad = false;
-        updateData()
+        updateData();
     }
-
-    /**
-     * object which the FlatList renders
-     */
-    const infoData = [
-        {
-            id: 1,
-            section: "Temperatur",
-            historyChart: tempChart,
-            avgChart: tempAvgChart,
-            unit: "°",
-            segmentsAvg: 3,
-            segmentsHistory: 5,
-        },
-        {
-            id: 2,
-            section: "Regenmenge",
-            historyChart: rainChart,
-            avgChart: rainAvgChart,
-            unit: "",
-            segmentsAvg: 3,
-            segmentsHistory: 5,
-        },
-        {
-            id: 3,
-            section: "Luftfeuchtigkeit",
-            historyChart: humidityChart,
-            avgChart: humidityAvgChart,
-            unit: "%",
-            segmentsAvg: 3,
-            segmentsHistory: 5,
-        },
-        {
-            id: 4,
-            section: "Luftdruck",
-            historyChart: pressureChart,
-            avgChart: pressureAvgChart,
-            unit: "hPa",
-            segmentsAvg: 3,
-            segmentsHistory: 5,
-        },
-        {
-            id: 5,
-            section: "Wind-\ngeschwindigkeit",
-            historyChart: windChart,
-            avgChart: windAvgChart,
-            unit: "km/h",
-            segmentsAvg: 3,
-            segmentsHistory: 5,
-        },
-    ];
 
     // snapToInterval={960}
     // snapToAlignment={"center"}

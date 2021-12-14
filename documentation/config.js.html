@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Documentation Index</title>
+	<title>Documentation Source: config.js</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -65,137 +65,67 @@ updates all consts used in the app</a></li><li><a href="global.html#WeatherInfoC
 <div class="row">
 
 	
-	<div class="col-md-8">
+	<div class="col-md-12">
 	
 		<div id="main">
 			
 
-	
-	
-
-
-
-
-
-
-
-
-
-
-
-	
-	
-
-
-
-
-
-
-
-
-
-
-
-	<h1 class="page-title">Index</h1>
+		<h1 class="page-title">Source: config.js</h1>
+    
 <section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript ">/**
+ * ip address of server
+ * @type {string}
+ */
+export const server = "http://127.0.0.1:8080/";
 
-<header>
-    
-        <h2>
-        App.js
-        </h2>
-        
-    
-</header>
+/**
+ * objects, that the app tries to render on the screen
+ * e.g.
+ * {
+ *       "id": "temperature",
+ *       "title": "Temperatur",
+ *       "unit": "°"
+ *   } 
+ */
+export const config = [
+    {
+        id: "temperature",
+        title: "Temperatur",
+        unit: "°",
+    },
+    {
+        id: "rain",
+        title: "Regenmenge",
+        unit: "",
+    },
+    {
+        id: "humidity",
+        title: "Luftfeuchtigkeit",
+        unit: "%",
+    },
+    {
+        id: "windspeed",
+        title: "Wind-\ngeschwindigkeit",
+        unit: "km/h",
+    },
+    {
+        id: "pressure",
+        title: "Luftdruck",
+        unit: "hPa",
+    },
+];
 
-
-<article>
-    <div class="container-overview">
-    
-        
-            <div class="description">React Native App to visualize weather data from the server, written for a school project</div>
-        
-
-        
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-	<dt class="tag-author method-doc-label method-doc-details-label">Author:</dt>
-	<dd class="tag-author">
-		<ul>
-			<li>Timon Gärtner</li>
-			</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="App.js.html">App.js</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</article>
-
+/**
+ * @type {boolean}
+ * if true, the app will disable logging (performance advantage)
+ */
+export const production = false;</pre>
+    </article>
 </section>
+
 
 
 
@@ -205,10 +135,6 @@ updates all consts used in the app</a></li><li><a href="global.html#WeatherInfoC
 
 	<div class="clearfix"></div>
 
-	
-		<div class="col-md-3">
-			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
-		</div>
 	
 
 </div>
