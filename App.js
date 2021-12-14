@@ -431,7 +431,7 @@ const App = () => {
             currentTempDataHtml = 0; // if no data is available, set 0
         }
         for (const m of infoData) {
-            console.log("updating " + m + "charts");
+            console.log("updating " + m.id + "charts");
             try {
                 m.historyChart = getDataOverTime(
                     weatherDataTemp[m.id].sorted,
@@ -450,15 +450,15 @@ const App = () => {
 
         try {
             // sets the hero image
-            if (sortedTemperature[0][1] > 20 && sortedRain[0][1] < 1000) {
+            if (weatherDataTemp.temperature.sorted[0][1] > 20 && weatherDataTemp.rain.sorted[0][1] < 1000) {
                 heroImg = heroImgs.sunny;
             } else if (
-                sortedRain[0][1] > 1000 &&
-                sortedTemperature[0][1] > -2.2 &&
-                sortedTemperature[0][1] < 2.2
+                weatherDataTemp.rain.sorted[0][1] > 1000 &&
+                weatherDataTemp.temperature.sorted[0][1] > -2.2 &&
+                weatherDataTemp.temperature.sorted[0][1] < 2.2
             ) {
                 heroImg = heroImgs.snowy;
-            } else if (sortedRain[0][1] > 1000) {
+            } else if (weatherDataTemp.rain.sorted[0][1] > 1000) {
                 heroImg = heroImgs.rainy;
             } else {
                 heroImg = heroImgs.cloudy;
